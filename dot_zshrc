@@ -1,0 +1,46 @@
+# === Oh My Zsh ===
+DISABLE_AUTO_UPDATE="true"
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="jonathan"
+plugins=(git zsh-syntax-highlighting zsh-autosuggestions)
+
+source "$ZSH/oh-my-zsh.sh"
+
+# === PATH ===
+export PATH="$HOME/bin:$PATH"
+
+# === Алиасы ===
+alias dockle='docker run --rm -v /var/run/docker.sock:/var/run/docker.sock goodwithtech/dockle'
+alias v="nvim"
+alias vim="nvim"
+alias nano="nvim"
+alias code="nvim"
+
+# === Функция unlock ===
+unlock() {
+    if [ -z "$1" ]; then
+        echo "❌ Ошибка: укажите путь к .app"
+        echo "Пример: unlock /Applications/Telegram.app"
+        return 1
+    fi
+    
+    local app_path="$1"
+    
+    if [ ! -d "$app_path" ]; then
+        echo "❌ Ошибка: '$app_path' не найден"
+        return 1
+    fi
+    
+    echo "🔓 Снимаю quarantine с: $app_path"
+    sudo xattr -d com.apple.quarantine "$app_path" 2>/dev/null || echo "   ⚠️  quarantine не найден (скорее всего уже снят)"
+    
+    echo "✍️  Подписываю ad-hoc: $app_path"
+    codesign --force --deep -s - "$app_path"
+    
+    if [ $? -eq 0 ]; then
+        echo "✅ Готово! Приложение можно запускать"
+    else
+        echo "❌ Ошибка при подписи"
+        return 1
+    fi
+}

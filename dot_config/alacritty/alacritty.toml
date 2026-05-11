@@ -1,0 +1,8 @@
+[window]
+decorations = "None"
+
+[font]
+size = 14
+
+[shell]
+program = "/bin/zsh"
