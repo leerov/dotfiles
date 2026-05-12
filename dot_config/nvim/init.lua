@@ -20,83 +20,6 @@ vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 vim.opt.foldenable     = false
 vim.opt.foldlevel      = 99
 
--- ─── НОВОЕ: Загрузка общей палитры из ~/.config/colors.toml ──────────────────
-local function load_colors()
-  local f = io.open(vim.fn.expand("~/.config/colors.toml"), "r")
-  if not f then
-    vim.notify("colors.toml not found, using defaults", vim.log.levels.WARN)
-    return {}
-  end
-  local colors = {}
-  for line in f:lines() do
-    local key, value = line:match("^(%w+)%s*=%s*\"(#[%x]+)\"")
-    if key and value then
-      colors[key] = value
-    end
-  end
-  f:close()
-  return colors
-end
-
-local C = load_colors()
-
--- Применение цветовой схемы
-vim.cmd("highlight clear")
-vim.cmd("set background=dark")
-
--- Устанавливаем цвета напрямую (без создания отдельного файла темы)
-vim.api.nvim_set_hl(0, "Normal",       { fg = C.fg, bg = C.bg })
-vim.api.nvim_set_hl(0, "Cursor",       { fg = C.curstext, bg = C.cursor })
-vim.api.nvim_set_hl(0, "CursorLine",   { bg = "#1A1A1A" })
-vim.api.nvim_set_hl(0, "Visual",       { bg = C.sel_bg, fg = C.sel_fg })
-vim.api.nvim_set_hl(0, "Search",       { bg = C.sel_bg, fg = C.sel_fg })
-vim.api.nvim_set_hl(0, "IncSearch",    { bg = C.brcyan, fg = C.black })
-vim.api.nvim_set_hl(0, "LineNr",       { fg = C.brblack })
-vim.api.nvim_set_hl(0, "CursorLineNr", { fg = C.white })
-vim.api.nvim_set_hl(0, "SignColumn",   { bg = C.bg })
-vim.api.nvim_set_hl(0, "Folded",       { fg = C.brblue, bg = "#1A1A1A" })
-vim.api.nvim_set_hl(0, "StatusLine",   { fg = C.fg, bg = "#1A1A1A" })
-vim.api.nvim_set_hl(0, "StatusLineNC", { fg = C.brblack, bg = "#0A0A0A" })
-
--- Синтаксис
-vim.api.nvim_set_hl(0, "Comment",      { fg = C.brblack, italic = true })
-vim.api.nvim_set_hl(0, "String",       { fg = C.green })
-vim.api.nvim_set_hl(0, "Number",       { fg = C.yellow })
-vim.api.nvim_set_hl(0, "Boolean",      { fg = C.magenta })
-vim.api.nvim_set_hl(0, "Function",     { fg = C.blue })
-vim.api.nvim_set_hl(0, "Keyword",      { fg = C.red })
-vim.api.nvim_set_hl(0, "Identifier",   { fg = C.cyan })
-vim.api.nvim_set_hl(0, "Statement",    { fg = C.red })
-vim.api.nvim_set_hl(0, "Type",         { fg = C.green })
-vim.api.nvim_set_hl(0, "Special",      { fg = C.magenta })
-vim.api.nvim_set_hl(0, "Underlined",   { fg = C.cyan, underline = true })
-vim.api.nvim_set_hl(0, "Error",        { fg = C.red, bold = true })
-vim.api.nvim_set_hl(0, "Todo",         { fg = C.yellow, bold = true })
-
--- Диагностика
-vim.api.nvim_set_hl(0, "DiagnosticError", { fg = C.red })
-vim.api.nvim_set_hl(0, "DiagnosticWarn",  { fg = C.yellow })
-vim.api.nvim_set_hl(0, "DiagnosticInfo",  { fg = C.blue })
-vim.api.nvim_set_hl(0, "DiagnosticHint",  { fg = C.cyan })
-
--- Терминальные цвета (для :terminal)
-vim.g.terminal_color_0  = C.black
-vim.g.terminal_color_1  = C.red
-vim.g.terminal_color_2  = C.green
-vim.g.terminal_color_3  = C.yellow
-vim.g.terminal_color_4  = C.blue
-vim.g.terminal_color_5  = C.magenta
-vim.g.terminal_color_6  = C.cyan
-vim.g.terminal_color_7  = C.white
-vim.g.terminal_color_8  = C.brblack
-vim.g.terminal_color_9  = C.brred
-vim.g.terminal_color_10 = C.brgreen
-vim.g.terminal_color_11 = C.bryellow
-vim.g.terminal_color_12 = C.brblue
-vim.g.terminal_color_13 = C.brmagenta
-vim.g.terminal_color_14 = C.brcyan
-vim.g.terminal_color_15 = C.brwhite
-
 -- ─── Keymaps ──────────────────────────────────────────────────────────────────
 vim.g.mapleader = " "
 
@@ -174,7 +97,19 @@ vim.opt.rtp:prepend(lazypath)
 -- ─── Plugins ──────────────────────────────────────────────────────────────────
 require("lazy").setup({
 
-  -- НОВОЕ: tokyonight удалён, цвета заданы вручную выше
+  -- Цветовая схема gruvbox-material (загружается сразу)
+  {
+    "sainnhe/gruvbox-material",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      vim.g.gruvbox_material_background = "hard"
+      vim.g.gruvbox_material_foreground = "material"
+      vim.g.gruvbox_material_palette = "material"
+      vim.g.gruvbox_material_better_performance = 1
+      vim.cmd("colorscheme gruvbox-material")
+    end,
+  },
 
   -- Анимация курсора и прокрутки
   {
@@ -228,45 +163,14 @@ require("lazy").setup({
     end,
   },
 
-  -- Статусбар
+  -- Статусбар (тема auto подхватит цвета gruvbox-material)
   {
     "nvim-lualine/lualine.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
       require("lualine").setup({
         options = {
-          theme = {
-            normal = {
-              a = { fg = C.black, bg = C.green, gui = "bold" },
-              b = { fg = C.fg, bg = "#1A1A1A" },
-              c = { fg = C.brblack, bg = C.bg },
-            },
-            insert = {
-              a = { fg = C.black, bg = C.blue, gui = "bold" },
-              b = { fg = C.fg, bg = "#1A1A1A" },
-              c = { fg = C.brblack, bg = C.bg },
-            },
-            visual = {
-              a = { fg = C.black, bg = C.magenta, gui = "bold" },
-              b = { fg = C.fg, bg = "#1A1A1A" },
-              c = { fg = C.brblack, bg = C.bg },
-            },
-            replace = {
-              a = { fg = C.black, bg = C.red, gui = "bold" },
-              b = { fg = C.fg, bg = "#1A1A1A" },
-              c = { fg = C.brblack, bg = C.bg },
-            },
-            command = {
-              a = { fg = C.black, bg = C.yellow, gui = "bold" },
-              b = { fg = C.fg, bg = "#1A1A1A" },
-              c = { fg = C.brblack, bg = C.bg },
-            },
-            inactive = {
-              a = { fg = C.brblack, bg = C.bg },
-              b = { fg = C.brblack, bg = C.bg },
-              c = { fg = C.brblack, bg = C.bg },
-            },
-          },
+          theme = "auto",
         },
       })
     end,
