@@ -4,5 +4,5 @@ decorations = "None"
 [font]
 size = 14
 
-[shell]
+[terminal.shell]
 program = "/bin/zsh"
