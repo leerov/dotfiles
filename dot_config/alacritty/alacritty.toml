@@ -1,8 +1,25 @@
+general.import = ["~/.config/colors.toml"]
+
 [window]
 decorations = "None"
+opacity = 0.666
 
 [font]
 size = 14
 
+[font.normal]
+family = "Hack Nerd Font"
+style = "Regular"
+
+# Альтернатива, если шрифт называется "HackNF"
+# [font.normal]
+# family = "HackNF"
+# style = "Regular"
+
 [terminal.shell]
 program = "/bin/zsh"
+args = ["-l"]
+
+[scrolling]
+history = 1000   # как 1000 строк прокрутки в iTerm2
+

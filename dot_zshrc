@@ -1,20 +1,41 @@
+# ~/.local/share/chezmoi/dot_zshrc
 # === Oh My Zsh ===
+
 DISABLE_AUTO_UPDATE="true"
 export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="jonathan"
-plugins=(git zsh-syntax-highlighting zsh-autosuggestions)
+
+# Используем кастомную тему
+ZSH_THEME="mytheme"
+
+# Плагины
+plugins=(
+    git
+    zsh-syntax-highlighting
+    zsh-autosuggestions
+)
 
 source "$ZSH/oh-my-zsh.sh"
 
+# === Настройки моей темы ===
+export MYTHEME_SHOW_TIME="true"      # Показывать время
+export MYTHEME_SHOW_EXIT_CODE="true" # Показывать код ошибки
+export MYTHEME_SHOW_GIT="true"       # Показывать git статус
+export MYTHEME_STYLE="full"          # full, minimal, compact
+
 # === PATH ===
-export PATH="$HOME/bin:$PATH"
 export PATH="$HOME/nvim-macos-x86_64/bin:$PATH"
+export PATH="$HOME/bin:$PATH"
+export PATH="$HOME/carbonyl-0.0.3/:$PATH"
+
 # === Алиасы ===
 alias dockle='docker run --rm -v /var/run/docker.sock:/var/run/docker.sock goodwithtech/dockle'
 alias v="nvim"
 alias vim="nvim"
 alias nano="nvim"
 alias code="nvim"
+alias c="clear"
+alias ll="ls -la"
+alias la="ls -a"
 
 # === Функция unlock ===
 unlock() {
@@ -43,4 +64,34 @@ unlock() {
         echo "❌ Ошибка при подписи"
         return 1
     fi
+}
+
+# === Быстрое переключение стилей темы ===
+theme_style() {
+    case "$1" in
+        full)
+            export MYTHEME_STYLE="full"
+            ;;
+        compact)
+            export MYTHEME_STYLE="compact"
+            ;;
+        minimal)
+            export MYTHEME_STYLE="minimal"
+            ;;
+        *)
+            echo "Usage: theme_style {full|compact|minimal}"
+            echo "Current: $MYTHEME_STYLE"
+            return 1
+            ;;
+    esac
+    echo "✅ Theme style changed to: $MYTHEME_STYLE"
+}
+
+# === Показать текущие настройки темы ===
+theme_info() {
+    echo "📊 Текущие настройки темы:"
+    echo "  Стиль: $MYTHEME_STYLE"
+    echo "  Показывать время: $MYTHEME_SHOW_TIME"
+    echo "  Показывать код ошибки: $MYTHEME_SHOW_EXIT_CODE"
+    echo "  Показывать Git: $MYTHEME_SHOW_GIT"
 }

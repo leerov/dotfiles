@@ -20,7 +20,82 @@ vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 vim.opt.foldenable     = false
 vim.opt.foldlevel      = 99
 
--- vim.opt.langmap = "ФИСВУАПРШОЛДЬТЩЗЙКЫЕГМЦЧНЯ;ABCDEFGHIJKLMNOPQRSTUVWXYZ,фисвуапршолдьтщзйкыегмцчня;abcdefghijklmnopqrstuvwxyz,х;[,Х;{,ъ;],Ъ;},ж;:,э;',Э;\",ю;.,б;\\,,Б;<,Ю;>"
+-- ─── НОВОЕ: Загрузка общей палитры из ~/.config/colors.toml ──────────────────
+local function load_colors()
+  local f = io.open(vim.fn.expand("~/.config/colors.toml"), "r")
+  if not f then
+    vim.notify("colors.toml not found, using defaults", vim.log.levels.WARN)
+    return {}
+  end
+  local colors = {}
+  for line in f:lines() do
+    local key, value = line:match("^(%w+)%s*=%s*\"(#[%x]+)\"")
+    if key and value then
+      colors[key] = value
+    end
+  end
+  f:close()
+  return colors
+end
+
+local C = load_colors()
+
+-- Применение цветовой схемы
+vim.cmd("highlight clear")
+vim.cmd("set background=dark")
+
+-- Устанавливаем цвета напрямую (без создания отдельного файла темы)
+vim.api.nvim_set_hl(0, "Normal",       { fg = C.fg, bg = C.bg })
+vim.api.nvim_set_hl(0, "Cursor",       { fg = C.curstext, bg = C.cursor })
+vim.api.nvim_set_hl(0, "CursorLine",   { bg = "#1A1A1A" })
+vim.api.nvim_set_hl(0, "Visual",       { bg = C.sel_bg, fg = C.sel_fg })
+vim.api.nvim_set_hl(0, "Search",       { bg = C.sel_bg, fg = C.sel_fg })
+vim.api.nvim_set_hl(0, "IncSearch",    { bg = C.brcyan, fg = C.black })
+vim.api.nvim_set_hl(0, "LineNr",       { fg = C.brblack })
+vim.api.nvim_set_hl(0, "CursorLineNr", { fg = C.white })
+vim.api.nvim_set_hl(0, "SignColumn",   { bg = C.bg })
+vim.api.nvim_set_hl(0, "Folded",       { fg = C.brblue, bg = "#1A1A1A" })
+vim.api.nvim_set_hl(0, "StatusLine",   { fg = C.fg, bg = "#1A1A1A" })
+vim.api.nvim_set_hl(0, "StatusLineNC", { fg = C.brblack, bg = "#0A0A0A" })
+
+-- Синтаксис
+vim.api.nvim_set_hl(0, "Comment",      { fg = C.brblack, italic = true })
+vim.api.nvim_set_hl(0, "String",       { fg = C.green })
+vim.api.nvim_set_hl(0, "Number",       { fg = C.yellow })
+vim.api.nvim_set_hl(0, "Boolean",      { fg = C.magenta })
+vim.api.nvim_set_hl(0, "Function",     { fg = C.blue })
+vim.api.nvim_set_hl(0, "Keyword",      { fg = C.red })
+vim.api.nvim_set_hl(0, "Identifier",   { fg = C.cyan })
+vim.api.nvim_set_hl(0, "Statement",    { fg = C.red })
+vim.api.nvim_set_hl(0, "Type",         { fg = C.green })
+vim.api.nvim_set_hl(0, "Special",      { fg = C.magenta })
+vim.api.nvim_set_hl(0, "Underlined",   { fg = C.cyan, underline = true })
+vim.api.nvim_set_hl(0, "Error",        { fg = C.red, bold = true })
+vim.api.nvim_set_hl(0, "Todo",         { fg = C.yellow, bold = true })
+
+-- Диагностика
+vim.api.nvim_set_hl(0, "DiagnosticError", { fg = C.red })
+vim.api.nvim_set_hl(0, "DiagnosticWarn",  { fg = C.yellow })
+vim.api.nvim_set_hl(0, "DiagnosticInfo",  { fg = C.blue })
+vim.api.nvim_set_hl(0, "DiagnosticHint",  { fg = C.cyan })
+
+-- Терминальные цвета (для :terminal)
+vim.g.terminal_color_0  = C.black
+vim.g.terminal_color_1  = C.red
+vim.g.terminal_color_2  = C.green
+vim.g.terminal_color_3  = C.yellow
+vim.g.terminal_color_4  = C.blue
+vim.g.terminal_color_5  = C.magenta
+vim.g.terminal_color_6  = C.cyan
+vim.g.terminal_color_7  = C.white
+vim.g.terminal_color_8  = C.brblack
+vim.g.terminal_color_9  = C.brred
+vim.g.terminal_color_10 = C.brgreen
+vim.g.terminal_color_11 = C.bryellow
+vim.g.terminal_color_12 = C.brblue
+vim.g.terminal_color_13 = C.brmagenta
+vim.g.terminal_color_14 = C.brcyan
+vim.g.terminal_color_15 = C.brwhite
 
 -- ─── Keymaps ──────────────────────────────────────────────────────────────────
 vim.g.mapleader = " "
@@ -39,7 +114,6 @@ end, { desc = "Copy all lines to clipboard" })
 
 map("n", "<leader>w", "<cmd>w<CR>", { desc = "Save" })
 map("n", "<leader>q", "<cmd>q<CR>", { desc = "Quit" })
--- ! <Esc> в normal mode переназначен — может конфликтовать с плагинами, но оставлено как есть
 map("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
 -- Навигация между окнами
@@ -48,7 +122,7 @@ map("n", "<leader>j", "<C-w>j", { desc = "Window down" })
 map("n", "<leader>k", "<C-w>k", { desc = "Window up" })
 map("n", "<leader>l", "<C-w>l", { desc = "Window right" })
 
--- Создание копии окна (текущего буфера) в направлении
+-- Создание копии окна
 map("n", "<leader>H", ":leftabove vsplit<CR>",  { desc = "Copy window left" })
 map("n", "<leader>L", ":rightbelow vsplit<CR>", { desc = "Copy window right" })
 map("n", "<leader>K", ":topleft split<CR>",     { desc = "Copy window up" })
@@ -74,13 +148,10 @@ map("n", "<leader>0", "10gt", { desc = "Tab 10" })
 -- Поиск и замена
 map("n", "<leader>f",  "<cmd>Telescope current_buffer_fuzzy_find<CR>", { desc = "Search in file" })
 map("n", "<leader>sf", "<cmd>Telescope live_grep<CR>",                { desc = "Search in project" })
--- ↑ заменено <leader-s-f> на <leader>sf (корректный синтаксис)
--- redo (<C-r>) больше не переопределено; для замены используйте <leader>sr
 map("n", "<leader>sr", ":%s/", { desc = "Search and replace in file", silent = false })
 
 -- Telescope
 map("n", "<C-p>",   "<cmd>Telescope find_files<CR>", { desc = "Find files" })
--- ! <C-S-p> может не работать в некоторых терминалах; при проблемах замените на другую комбинацию, например <leader>cp
 map("n", "<C-S-p>", "<cmd>Telescope commands<CR>",   { desc = "Command palette" })
 
 -- ─── Автообновление буфера ────────────────────────────────────────────────────
@@ -103,32 +174,27 @@ vim.opt.rtp:prepend(lazypath)
 -- ─── Plugins ──────────────────────────────────────────────────────────────────
 require("lazy").setup({
 
-  -- Цветовая схема
-  {
-    "folke/tokyonight.nvim",
-    priority = 1000,
-    config   = function() vim.cmd("colorscheme tokyonight-night") end,
-  },
-
+  -- НОВОЕ: tokyonight удалён, цвета заданы вручную выше
 
   -- Анимация курсора и прокрутки
   {
-  "josstei/whisk.nvim",
-  event = "VeryLazy",
-  opts = {
-    cursor = {
-      duration = 150,  -- длительность анимации курсора (в мс)
-      easing = "ease-out",
-      enabled = true,
+    "josstei/whisk.nvim",
+    event = "VeryLazy",
+    opts = {
+      cursor = {
+        duration = 150,
+        easing = "ease-out",
+        enabled = true,
+      },
+      scroll = {
+        duration = 200,
+        easing = "ease-in-out",
+        enabled = true,
+      },
     },
-    scroll = {
-      duration = 200,  -- длительность анимации прокрутки (в мс)
-      easing = "ease-in-out",
-      enabled = true,
-    },
-    -- keymaps = { cursor = true, scroll = true }, -- можно явно включить анимации, если они отключены
-  },  
-  -- Файловый менеджер (закрывается только после открытия файла)
+  },
+
+  -- Файловый менеджер
   {
     "nvim-tree/nvim-tree.lua",
     dependencies = { "nvim-tree/nvim-web-devicons" },
@@ -137,7 +203,6 @@ require("lazy").setup({
         local api = require("nvim-tree.api")
         api.config.mappings.default_on_attach(bufnr)
 
-        -- Новая логика: закрываем дерево только для файлов
         local function edit_and_close()
           local node = api.tree.get_node_under_cursor()
           if node and node.type == "file" then
@@ -168,7 +233,42 @@ require("lazy").setup({
     "nvim-lualine/lualine.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
-      require("lualine").setup({ options = { theme = "tokyonight" } })
+      require("lualine").setup({
+        options = {
+          theme = {
+            normal = {
+              a = { fg = C.black, bg = C.green, gui = "bold" },
+              b = { fg = C.fg, bg = "#1A1A1A" },
+              c = { fg = C.brblack, bg = C.bg },
+            },
+            insert = {
+              a = { fg = C.black, bg = C.blue, gui = "bold" },
+              b = { fg = C.fg, bg = "#1A1A1A" },
+              c = { fg = C.brblack, bg = C.bg },
+            },
+            visual = {
+              a = { fg = C.black, bg = C.magenta, gui = "bold" },
+              b = { fg = C.fg, bg = "#1A1A1A" },
+              c = { fg = C.brblack, bg = C.bg },
+            },
+            replace = {
+              a = { fg = C.black, bg = C.red, gui = "bold" },
+              b = { fg = C.fg, bg = "#1A1A1A" },
+              c = { fg = C.brblack, bg = C.bg },
+            },
+            command = {
+              a = { fg = C.black, bg = C.yellow, gui = "bold" },
+              b = { fg = C.fg, bg = "#1A1A1A" },
+              c = { fg = C.brblack, bg = C.bg },
+            },
+            inactive = {
+              a = { fg = C.brblack, bg = C.bg },
+              b = { fg = C.brblack, bg = C.bg },
+              c = { fg = C.brblack, bg = C.bg },
+            },
+          },
+        },
+      })
     end,
   },
 
@@ -236,7 +336,7 @@ require("lazy").setup({
     config = function() require("which-key").setup() end,
   },
 
-  -- Автосохранение (работает, но плагин может быть нестабильным; можно рассмотреть альтернативы)
+  -- Автосохранение
   {
     "Pocco81/auto-save.nvim",
     config = function()
@@ -292,7 +392,6 @@ require("lazy").setup({
   -- LSP
   {
     "neovim/nvim-lspconfig",
-    -- Добавлена зависимость, чтобы cmp_nvim_lsp точно был загружен до вызова default_capabilities()
     dependencies = { "hrsh7th/cmp-nvim-lsp" },
     config = function()
       local caps = require("cmp_nvim_lsp").default_capabilities()
@@ -314,7 +413,7 @@ require("lazy").setup({
       }
       vim.lsp.enable("lua_ls")
 
-      -- Python LSP — pyright
+      -- Python LSP
       vim.lsp.config.pyright = {
         cmd          = { "pyright-langserver", "--stdio" },
         filetypes    = { "python" },
@@ -326,7 +425,7 @@ require("lazy").setup({
               typeCheckingMode         = "basic",
               autoSearchPaths          = true,
               useLibraryCodeForTypes   = true,
-              diagnosticMode           = "workspace", -- параметр допустим, но в новых версиях pyright может называться diagnosticMode
+              diagnosticMode           = "workspace",
             },
           },
         },
@@ -367,5 +466,4 @@ require("lazy").setup({
       require("nvim-autopairs").setup()
     end,
   },
-  }
 })

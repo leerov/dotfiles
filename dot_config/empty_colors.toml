@@ -1,0 +1,33 @@
+# ~/.config/colors.toml — единая палитра для Alacritty и Neovim
+
+[colors.primary]
+foreground = "#BBBBBB"
+background = "#000000"
+
+[colors.cursor]
+cursor = "#BBBBBB"
+text   = "#FFFFFF"
+
+[colors.selection]
+background = "#B5D5FF"
+text       = "#000000"
+
+[colors.normal]
+black   = "#000000"
+red     = "#BB0000"
+green   = "#00BB00"
+yellow  = "#BBBB00"
+blue    = "#0000BB"
+magenta = "#BB00BB"
+cyan    = "#00BBBB"
+white   = "#BBBBBB"
+
+[colors.bright]
+black   = "#555555"
+red     = "#FF5555"
+green   = "#55FF55"
+yellow  = "#FFFF55"
+blue    = "#5555FF"
+magenta = "#FF55FF"
+cyan    = "#55FFFF"
+white   = "#FFFFFF"
