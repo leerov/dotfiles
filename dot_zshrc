@@ -1,6 +1,6 @@
 # ~/.local/share/chezmoi/dot_zshrc
+defaults write com.apple.finder CreateDesktop FALSE; killall Finder
 eval "$(~/bin/starship init zsh)"
-
 # Плагины
 plugins=(
     git
@@ -32,6 +32,8 @@ alias grep='grep --color=auto'
 alias diff='diff --color=auto'
 alias man='man -P "less -R"'
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#ff00ff,bg=cyan,bold,underline"
+~/.tmux/plugins/tmux-gruvbox/gruvbox-tpm.tmux
+
 # === Функция unlock ===
 unlock() {
     if [ -z "$1" ]; then
