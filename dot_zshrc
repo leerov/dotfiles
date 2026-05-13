@@ -1,6 +1,6 @@
 # ~/.local/share/chezmoi/dot_zshrc
-defaults write com.apple.finder CreateDesktop FALSE; killall Finder
-eval "$(~/bin/starship init zsh)"
+# defaults write com.apple.finder CreateDesktop FALSE; killall Finder
+
 # Плагины
 plugins=(
     git
@@ -13,6 +13,7 @@ plugins=(
 export PATH="$HOME/nvim-macos-x86_64/bin:$PATH"
 export PATH="$HOME/bin:$PATH"
 export PATH="$HOME/carbonyl-0.0.3/:$PATH"
+eval "$(starship init zsh)"
 
 # === Цвета и подсветка вывода ===
 export CLICOLOR=1
@@ -62,4 +63,6 @@ unlock() {
         return 1
     fi
 }
-
+if command -v tmux &> /dev/null && [ -z "$TMUX" ]; then
+    tmux attach -t main || tmux new-session -s main
+fi
