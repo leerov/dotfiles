@@ -8,13 +8,18 @@ plugins=(
 )
 
 
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#ff00ff,bg=cyan,bold,underline"
+# ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#ff00ff,bg=cyan,bold,underline"
 
 
-for script in ~/.myaddons/zsh_scripts/*.sh; do
-    [ -f "$script" ] && source "$script"
-done
+SCRIPTS_DIR="$HOME/.myaddons/zsh_scripts"
+ORDER_FILE="$SCRIPTS_DIR/order.txt"
 
+if [[ -f "$ORDER_FILE" ]]; then
+    while IFS= read -r script; do
+        [[ -z "$script" || "$script" == \#* ]] && continue
+		source "$SCRIPTS_DIR/$script"
+    done < "$ORDER_FILE"
+fi
 
 eval "$(starship init zsh)"
 

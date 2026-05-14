@@ -1,0 +1,8 @@
+path.sh
+colors.sh
+brew.sh
+chezmoi_edit.sh
+unlock.sh
+showcopy.sh
+ap.sh
+alias.sh

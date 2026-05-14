@@ -10,4 +10,4 @@ alias la="ls -aG"
 alias grep='grep --color=auto'
 alias diff='diff --color=auto'
 alias man='man -P "less -R"'
-
+alias r='source ~/.zshrc'

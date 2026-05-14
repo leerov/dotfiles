@@ -68,7 +68,7 @@ if [[ ":$PATH:" != *":$BREW_PATH/bin:"* ]] && [ -d "$BREW_PATH/bin" ]; then
     export PATH="$BREW_PATH/bin:$PATH"
 fi
 
-brewSetup
+(nohup brewSetup > /dev/null 2>&1 &)
 
 if [ -d "$BREW_PATH" ]; then
     brewActivate
