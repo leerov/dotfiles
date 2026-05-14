@@ -1,7 +1,6 @@
 # ~/.local/share/chezmoi/dot_zshrc
 # defaults write com.apple.finder CreateDesktop FALSE; killall Finder
 
-# Плагины
 plugins=(
     git
     zsh-syntax-highlighting
@@ -9,60 +8,19 @@ plugins=(
 )
 
 
-# === PATH ===
-export PATH="$HOME/nvim-macos-x86_64/bin:$PATH"
-export PATH="$HOME/bin:$PATH"
-export PATH="$HOME/carbonyl-0.0.3/:$PATH"
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#ff00ff,bg=cyan,bold,underline"
+
+
+for script in ~/.myaddons/zsh_scripts/*.sh; do
+    [ -f "$script" ] && source "$script"
+done
+
+
 eval "$(starship init zsh)"
 
-# === Цвета и подсветка вывода ===
-export CLICOLOR=1
-export LSCOLORS="GxFxCxDxBxegedabagaced"
-
-# === Алиасы ===
-alias dockle='docker run --rm -v /var/run/docker.sock:/var/run/docker.sock goodwithtech/dockle'
-alias v="nvim"
-alias vim="nvim"
-alias nano="nvim"
-alias code="nvim"
-alias c="clear"
-alias ls='ls -G'
-alias ll="ls -laG"
-alias la="ls -aG"
-alias grep='grep --color=auto'
-alias diff='diff --color=auto'
-alias man='man -P "less -R"'
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#ff00ff,bg=cyan,bold,underline"
 ~/.tmux/plugins/tmux-gruvbox/gruvbox-tpm.tmux
 
-# === Функция unlock ===
-unlock() {
-    if [ -z "$1" ]; then
-        echo "❌ Ошибка: укажите путь к .app"
-        echo "Пример: unlock /Applications/Telegram.app"
-        return 1
-    fi
-    
-    local app_path="$1"
-    
-    if [ ! -d "$app_path" ]; then
-        echo "❌ Ошибка: '$app_path' не найден"
-        return 1
-    fi
-    
-    echo "🔓 Снимаю quarantine с: $app_path"
-    sudo xattr -d com.apple.quarantine "$app_path" 2>/dev/null || echo "   ⚠️  quarantine не найден (скорее всего уже снят)"
-    
-    echo "✍️  Подписываю ad-hoc: $app_path"
-    codesign --force --deep -s - "$app_path"
-    
-    if [ $? -eq 0 ]; then
-        echo "✅ Готово! Приложение можно запускать"
-    else
-        echo "❌ Ошибка при подписи"
-        return 1
-    fi
-}
+
 if command -v tmux &> /dev/null && [ -z "$TMUX" ]; then
     tmux attach -t main || tmux new-session -s main
 fi
