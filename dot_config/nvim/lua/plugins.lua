@@ -210,4 +210,16 @@ require("lazy").setup({
       require("nvim-autopairs").setup()
     end,
   },
+
+  {
+  "ellisonleao/glow.nvim",
+  dependencies = { "nvim-lua/plenary.nvim" },
+  config = function()
+    require("glow").setup({
+      border = "rounded",
+      style  = "dark",
+    })
+    vim.keymap.set("n", "<leader>m", "<cmd>Glow<CR>", { desc = "Markdown preview" })
+  end,
+ },
 })
