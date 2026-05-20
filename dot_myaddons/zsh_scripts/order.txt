@@ -6,3 +6,5 @@ unlock.sh
 showcopy.sh
 ap.sh
 alias.sh
+translit.sh
+clean.sh

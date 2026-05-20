@@ -61,7 +61,7 @@ EOF
     cat "$AP_HOME/ap.md" >> "$tmpfile"
 
     echo -e "\n\n=== CURRENT CODE (with line numbers) ===\n" >> "$tmpfile"
-    sc --stdout >> "$tmpfile" 2>&1
+    sc --stdout --no-numbers >> "$tmpfile" 2>&1
 
     cat >> "$tmpfile" << 'EOF'
 
