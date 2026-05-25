@@ -70,7 +70,11 @@ EOF
 # I have analyzed the project structure and code.
 # I am ready to generate AP patches.
 # Just tell me what to change.
-#
+# If I write something to analyze, the analysis should not contain a patch.
+# The patch must be located inside a block of code like:
+# ```ap
+# *patch*
+# ```
 # === PROJECT STRUCTURE (again) ===
 #
 EOF
