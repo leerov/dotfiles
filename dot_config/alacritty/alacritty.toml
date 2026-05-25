@@ -1,8 +1,8 @@
 general.import = ["~/.config/colors.toml"]
-
 [window]
 decorations = "None"
 opacity = 0.666
+blur = true
 
 [window.dimensions]
 columns = 120
