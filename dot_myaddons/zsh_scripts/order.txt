@@ -8,3 +8,4 @@ ap.sh
 alias.sh
 translit.sh
 clean.sh
+python_aliases.sh
