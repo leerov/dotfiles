@@ -14,5 +14,8 @@ alias r='source ~/.zshrc'
 alias py='python3'
 alias python='python'
 alias pip='pip3'
-alias pbcopy='xclip -selection clipboard'
-alias pbpaste='xclip -selection clipboard -o'
+
+if ! command -v pbcopy &>/dev/null; then
+    alias pbcopy='xclip -selection clipboard'
+    alias pbpaste='xclip -selection clipboard -o'
+fi
