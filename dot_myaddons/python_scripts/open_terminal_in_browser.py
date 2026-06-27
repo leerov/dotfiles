@@ -1,58 +1,75 @@
 #!/usr/bin/env python3
-"""
-Скрипт, который устанавливает pyxtermjs (если не установлен),
-запускает терминал с /bin/zsh через pyxtermjs с шрифтом Hack
-и через 2 секунды открывает браузер по адресу http://127.0.0.1:5000.
-"""
-
-import subprocess
-import sys
-import time
-import webbrowser
+import os
+import pty
+import select
 import threading
+import webbrowser
+import time
 
+from flask import Flask, render_template_string
+from flask_sock import Sock
+
+app = Flask(__name__)
+sock = Sock(app)
+
+HTML = '''
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+    <style>
+        body { margin: 0; padding: 10px; background: #1e1e1e; }
+        /* Основной шрифт – Hack Nerd Font Mono, запасные – Hack, monospace */
+        .xterm { font-family: 'Hack Nerd Font Mono', 'Hack Nerd Font', 'Hack', monospace; }
+    </style>
+</head>
+<body>
+    <div id="terminal"></div>
+    <script>
+        const term = new Terminal({
+            // Передаём те же варианты в порядке предпочтения
+            fontFamily: "'Hack Nerd Font Mono', 'Hack Nerd Font', 'Hack', monospace"
+        });
+        term.open(document.getElementById('terminal'));
+        const ws = new WebSocket('ws://' + location.host + '/ws');
+        term.onData(data => ws.send(data));
+        ws.onmessage = ev => term.write(ev.data);
+    </script>
+</body>
+</html>
+'''
+
+@app.route('/')
+def index():
+    return render_template_string(HTML)
+
+@sock.route('/ws')
+def ws(ws):
+    # Создаём псевдотерминал и запускаем /bin/zsh
+    pid, fd = pty.fork()
+    if pid == 0:
+        os.execvp('/bin/zsh', ['/bin/zsh'])
+    else:
+        try:
+            while True:
+                r, _, _ = select.select([fd], [], [], 0.1)
+                if fd in r:
+                    data = os.read(fd, 1024)
+                    if data:
+                        ws.send(data.decode('utf-8', errors='ignore'))
+                msg = ws.receive()
+                if msg is not None:
+                    os.write(fd, msg.encode())
+        except:
+            pass
+        finally:
+            os.close(fd)
 
 def open_browser():
-    """Открывает браузер через 2 секунды после запуска."""
     time.sleep(2)
     webbrowser.open('http://127.0.0.1:5000')
 
-
-def main():
-    # Проверяем, установлен ли pyxtermjs
-    try:
-        subprocess.run([sys.executable, '-m', 'pyxtermjs', '--help'],
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        installed = True
-    except subprocess.CalledProcessError:
-        installed = False
-
-    if not installed:
-        print("pyxtermjs не найден, устанавливаю...")
-        try:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyxtermjs'])
-        except subprocess.CalledProcessError as e:
-            print(f"Ошибка установки: {e}")
-            sys.exit(1)
-        print("Установка завершена.")
-    else:
-        print("pyxtermjs уже установлен.")
-
-    # Запускаем поток, который откроет браузер через 2 секунды
+if __name__ == '__main__':
     threading.Thread(target=open_browser, daemon=True).start()
-
-    # Запускаем сервер pyxtermjs с нужным шрифтом
-    print("Запуск pyxtermjs... Остановите сервер с помощью Ctrl+C.")
-    try:
-        subprocess.run([
-            sys.executable, '-m', 'pyxtermjs',
-            '--command', '/bin/zsh',
-            '--font-family', 'Hack'
-        ], check=True)
-    except KeyboardInterrupt:
-        print("\nСервер остановлен.")
-        sys.exit(0)
-
-
-if __name__ == "__main__":
-    main()
+    app.run(host='0.0.0.0', port=5000)
