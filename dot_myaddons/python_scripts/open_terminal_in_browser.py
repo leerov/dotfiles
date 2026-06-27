@@ -1,13 +1,26 @@
 #!/usr/bin/env python3
 import os
 import pty
-import select
 import threading
 import webbrowser
 import time
+import subprocess
+import sys
 
-from flask import Flask, render_template_string
-from flask_sock import Sock
+def install(package):
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', package])
+
+try:
+    from flask import Flask, render_template_string
+except ImportError:
+    install('flask')
+    from flask import Flask, render_template_string
+
+try:
+    from flask_sock import Sock
+except ImportError:
+    install('flask-sock')
+    from flask_sock import Sock
 
 app = Flask(__name__)
 sock = Sock(app)
@@ -18,20 +31,54 @@ HTML = '''
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
     <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+    <!-- Подключаем аддон для автоматического подгона размера -->
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
     <style>
-        body { margin: 0; padding: 10px; background: #1e1e1e; }
-        /* Основной шрифт – Hack Nerd Font Mono, запасные – Hack, monospace */
-        .xterm { font-family: 'Hack Nerd Font Mono', 'Hack Nerd Font', 'Hack', monospace; }
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #1e1e1e;
+        }
+        #terminal {
+            height: 100%;
+            width: 100%;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        /* Принудительное растяжение всех внутренних элементов xterm */
+        .xterm,
+        .xterm-viewport,
+        .xterm-screen {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .xterm {
+            font-family: 'Hack Nerd Font Mono', 'Hack Nerd Font', 'Hack', monospace;
+        }
     </style>
 </head>
 <body>
     <div id="terminal"></div>
     <script>
         const term = new Terminal({
-            // Передаём те же варианты в порядке предпочтения
             fontFamily: "'Hack Nerd Font Mono', 'Hack Nerd Font', 'Hack', monospace"
         });
+
+        // Используем FitAddon для подгонки размеров
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+
+        // Открываем терминал в контейнере
         term.open(document.getElementById('terminal'));
+
+        // Подгоняем сразу и при изменении размера окна
+        fitAddon.fit();
+        window.addEventListener('resize', () => fitAddon.fit());
+
+        // WebSocket
         const ws = new WebSocket('ws://' + location.host + '/ws');
         term.onData(data => ws.send(data));
         ws.onmessage = ev => term.write(ev.data);
@@ -46,25 +93,37 @@ def index():
 
 @sock.route('/ws')
 def ws(ws):
-    # Создаём псевдотерминал и запускаем /bin/zsh
     pid, fd = pty.fork()
     if pid == 0:
         os.execvp('/bin/zsh', ['/bin/zsh'])
     else:
-        try:
-            while True:
-                r, _, _ = select.select([fd], [], [], 0.1)
-                if fd in r:
+        def reader():
+            try:
+                while True:
                     data = os.read(fd, 1024)
-                    if data:
-                        ws.send(data.decode('utf-8', errors='ignore'))
-                msg = ws.receive()
-                if msg is not None:
+                    if not data:
+                        break
+                    ws.send(data.decode('utf-8', errors='ignore'))
+            except Exception:
+                pass
+
+        def writer():
+            try:
+                while True:
+                    msg = ws.receive()
+                    if msg is None:
+                        break
                     os.write(fd, msg.encode())
-        except:
-            pass
-        finally:
-            os.close(fd)
+            except Exception:
+                pass
+
+        t1 = threading.Thread(target=reader, daemon=True)
+        t2 = threading.Thread(target=writer, daemon=True)
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+        os.close(fd)
 
 def open_browser():
     time.sleep(2)
