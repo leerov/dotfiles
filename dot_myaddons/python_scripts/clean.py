@@ -229,7 +229,6 @@ class SystemCleaner:
         self.current_phase = "Initializing..."
         self.running = True
         self.log_messages = deque(maxlen=10)
-        # Кэш для инкрементального обновления
         self.cache = {}
     
     @staticmethod
@@ -426,14 +425,15 @@ class UIState:
         self.title = "🧹 System Cleaner v2.0"
         self.disk_usage = None
         self.usage_percent = 0
-        self.phase = "Ready"
+        self.phase = "Loading..."
         self.progress = 0.0
         self.cleaned_count = 0
-        self.files_list = []
+        self.files_list = ["⏳ Scanning files..."]
         self.log_messages = []
         self.spinner_frame = 0
-        self.dirty = True  # Флаг изменения
+        self.dirty = True
         self.last_update = 0
+        self.scanning = True
         
     def mark_dirty(self):
         self.dirty = True
@@ -459,10 +459,25 @@ def draw_ui(stdscr):
     spinner = Spinner()
     state = UIState()
     
-    # Получаем начальные данные в фоне
+    # Получаем начальные данные синхронно (быстро)
     state.disk_usage = cleaner.get_disk_usage(cleaner.home) or cleaner.get_disk_usage(Path("/"))
-    state.files_list = cleaner.get_file_list_for_display()
     state.dirty = True
+    
+    # Запускаем фоновый поток для сканирования файлов
+    def scan_files():
+        state.phase = "Scanning files..."
+        state.mark_dirty()
+        files = cleaner.get_largest_files(cleaner.home, 10)
+        if files:
+            state.files_list = [f"{f.size_human:>8}  {f.path}" for f in files]
+        else:
+            state.files_list = ["No large files found"]
+        state.scanning = False
+        state.phase = "Ready"
+        state.mark_dirty()
+    
+    scan_thread = threading.Thread(target=scan_files, daemon=True)
+    scan_thread.start()
     
     cleaning = False
     cleanup_thread = None
@@ -482,19 +497,6 @@ def draw_ui(stdscr):
                 pass
         return False
     
-    def clear_from(y):
-        """Очистить строки от y до низа"""
-        h, w = stdscr.getmaxyx()
-        for i in range(y, h):
-            try:
-                stdscr.move(i, 0)
-                stdscr.clrtoeol()
-            except:
-                pass
-        line_cache.clear()
-        state.dirty = True
-    
-    # Быстрый запуск - показываем интерфейс сразу
     start_time = time.time()
     
     while True:
@@ -504,15 +506,14 @@ def draw_ui(stdscr):
             # Обновляем анимацию спиннера
             spinner_char = spinner.next()
             
-            # Обновляем данные если не идет очистка и прошло время
+            # Обновляем данные дискового пространства раз в 5 секунд
             current_time = time.time()
-            if not cleaning and current_time - state.last_update > 2.0:
-                state.files_list = cleaner.get_file_list_for_display()
+            if not cleaning and current_time - state.last_update > 5.0:
                 state.disk_usage = cleaner.get_disk_usage(cleaner.home) or cleaner.get_disk_usage(Path("/"))
                 state.last_update = current_time
                 state.dirty = True
             
-            # Заголовок (всегда обновляем только если изменился)
+            # Заголовок
             x_center = (width - len(state.title)) // 2
             update_line(0, x_center, state.title, curses.color_pair(1) | curses.A_BOLD)
             
@@ -526,7 +527,6 @@ def draw_ui(stdscr):
                 usage_str = f"Total: {state.disk_usage.total}  Used: {state.disk_usage.used}  Available: {state.disk_usage.available}"
                 update_line(3, 4, usage_str, 0)
                 
-                # Визуальный индикатор использования
                 try:
                     total_gb = float(state.disk_usage.total.replace('Gi', ''))
                     used_gb = float(state.disk_usage.used.replace('Gi', ''))
@@ -559,7 +559,7 @@ def draw_ui(stdscr):
             stats_text = f"📊 Items cleaned: {state.cleaned_count}"
             update_line(10, 2, stats_text, curses.color_pair(6))
             
-            files_text = f"📁 Files scanned: {len(state.files_list)}"
+            files_text = f"📁 Files scanned: {len(state.files_list) if not state.scanning else 'Scanning...'}"
             update_line(11, 2, files_text, curses.color_pair(6))
             
             # Top files section
@@ -567,23 +567,23 @@ def draw_ui(stdscr):
             
             # Show top files with инкрементальным обновлением
             max_y = height - 6
-            for i, file_info in enumerate(state.files_list[:min(10, max_y - 15)]):
-                if i < 10:
-                    try:
-                        display_info = file_info
-                        if len(display_info) > width - 8:
-                            display_info = display_info[:width - 11] + "..."
-                        update_line(14 + i, 4, display_info, 0)
-                    except:
-                        pass
+            display_list = state.files_list[:min(10, max_y - 15)]
+            for i, file_info in enumerate(display_list):
+                try:
+                    display_info = file_info
+                    if len(display_info) > width - 8:
+                        display_info = display_info[:width - 11] + "..."
+                    update_line(14 + i, 4, display_info, 0)
+                except:
+                    pass
             
             # Clear remaining file lines
-            start_y = 14 + len(state.files_list[:min(10, max_y - 15)])
+            start_y = 14 + len(display_list)
             for i in range(start_y, min(14 + 10, height - 5)):
                 update_line(i, 4, " " * (width - 8), 0)
             
             # Log messages
-            log_start_y = min(14 + len(state.files_list[:min(10, max_y - 15)]), height - 5)
+            log_start_y = min(14 + len(display_list), height - 5)
             if log_start_y < height - 5:
                 update_line(log_start_y, 2, "📝 Recent Activity:", curses.color_pair(5))
                 
@@ -654,13 +654,20 @@ def draw_ui(stdscr):
                 if not cleaning:
                     state.phase = "Refreshing..."
                     cleaner.log_messages.append("🔄 Refreshing data...")
-                    state.files_list = cleaner.get_file_list_for_display()
-                    state.disk_usage = cleaner.get_disk_usage(cleaner.home) or cleaner.get_disk_usage(Path("/"))
-                    state.phase = "Ready"
+                    # Запускаем пересканирование в фоне
+                    def refresh_files():
+                        files = cleaner.get_largest_files(cleaner.home, 10)
+                        if files:
+                            state.files_list = [f"{f.size_human:>8}  {f.path}" for f in files]
+                        else:
+                            state.files_list = ["No large files found"]
+                        state.phase = "Ready"
+                        state.dirty = True
+                    threading.Thread(target=refresh_files, daemon=True).start()
                     state.dirty = True
                     state.last_update = time.time()
             
-            elif key == -1:  # No key pressed
+            elif key == -1:
                 # Просто обновляем спиннер
                 state.dirty = True
             
@@ -677,9 +684,7 @@ def draw_ui(stdscr):
 
 def main():
     """Entry point"""
-    # Быстрый запуск - сразу показываем интерфейс
     try:
-        # Устанавливаем терминал в raw режим для быстрого отклика
         curses.wrapper(draw_ui)
     except KeyboardInterrupt:
         print("\n👋 Goodbye!")
