@@ -7,5 +7,4 @@ unlock.sh
 showcopy.sh
 ap.sh
 translit.sh
-clean.sh
 python_aliases.sh

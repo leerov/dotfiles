@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # lib/brew-functions.sh - Функции для управления Homebrew
 
 USER_NAME=$(whoami)

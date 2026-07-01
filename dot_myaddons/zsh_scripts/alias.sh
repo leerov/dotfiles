@@ -3,7 +3,6 @@ alias v="nvim"
 alias vim="nvim"
 alias nano="nvim"
 alias code="nvim"
-alias c="clear"
 alias ls='ls -G'
 alias ll="ls -laG"
 alias la="ls -aG"
