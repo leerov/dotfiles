@@ -19,8 +19,9 @@ family = "Hack Nerd Font"
 style = "Regular"
 
 [terminal.shell]
-program = "/Users/harveyfa/bin/tmux"
-args = ["new-session", "-A", "-D", "-s", "main"]
+program = "zsh"
+# program = "/Users/harveyfa/bin/tmux"
+# args = ["new-session", "-A", "-D", "-s", "main"]
 
 [scrolling]
 history = 1000

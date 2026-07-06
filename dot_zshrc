@@ -27,7 +27,7 @@ if [[ -f "$ORDER_FILE" ]]; then
 fi
 
 eval "$(starship init zsh)"
-~/.tmux/plugins/tpm/tpm
+#~/.tmux/plugins/tpm/tpm
 # ~/.tmux/plugins/tmux-gruvbox/gruvbox-tpm.tmux
 
 # if command -v tmux &> /dev/null && [ -z "$TMUX" ]; then
