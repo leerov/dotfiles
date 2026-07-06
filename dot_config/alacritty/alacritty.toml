@@ -1,6 +1,6 @@
 general.import = ["~/.config/colors.toml"]
 [window]
-decorations = "None"
+#decorations = "None"
 opacity = 0.666
 blur = true
 
