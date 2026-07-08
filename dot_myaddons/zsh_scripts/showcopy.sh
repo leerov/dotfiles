@@ -105,7 +105,7 @@ showcopy() {
             if [[ -n "$file" ]]; then
                 files+=("$file")
             fi
-        done < <(find "$dir" -type f -name "$ext" 2>/dev/null | grep -v -E "(\.git|node_modules|__pycache__|\.venv|venv|build|dist|.idea|.vscode)")
+        done < <(find "$dir" -type f -name "$ext" 2>/dev/null | grep -v -E "(\.git|node_modules|__pycache__|\.venv|venv|build|dist|.idea|.vscode|target|\.pytest_cache|\.mypy_cache|\.tox|\.eggs|\.gradle|\.next|out|\.output|\.serverless|\.terraform|\.parcel-cache|\.webpack|\.sass-cache|\.vite|\.yarn|\.pnpm-store|\.bun|_build|deps|\.gleam|_gleam_build|\.mix|\.cargo|\.rustup|\.stack-work|\.hie-bios|\.cabal-sandbox|\.cabal|\.stack|\.nix|\.direnv|\.env|\.virtualenv|\.pyenv|\.pip|\.pypoetry|\.conda|\.julia|\.Rproj\.user|\.rstudio|\.kotlin|\.clj-kondo|\.lsp|\.cljr|\.cpcache|\.shadow-cljs|\.figx|\.nrepl|\.boot|\.lein|\.m2|\.sbt|\.eclipse|\.project|\.classpath|\.settings|\.metadata|\.DS_Store|\.Trashes|\.fseventsd|\.TemporaryItems|\.Trash|\.localized|\.apdisk|\.AppleDouble|\.LSOverride|\.DocumentRevisions-V100|\.PKInstallSandboxManager|\.com\.apple\.timemachine\.supported|\.com\.apple\.timemachine\.donotpresent|\.vol|\.cddb|\.cpan|\.cpcpan|\.perl|\.go|\.gopath|\.godoc|\.glide|\.dep|\.vendor|\.mod|\.sum|\.work|\.bin|\.pkg|\.npm|\.nvm|\.deno|\.node|\.asdf|\.sdkman|\.jabba|\.coursier|\.ivy2|\.netbeans|\.clion|\.pycharm|\.intellij|\.rubymine|\.webstorm|\.phpstorm|\.goland|\.appcode|\.datagrip|\.rider|\.android|\.androidstudio|\.xcode|\.swiftpm|\.lldb|\.gdb|\.clang|\.cmake|\.ninja|\.conan|\.vcpkg|\.bazel|\.pants|\.please|\.mage|\.task|\.just|\.make)")
     done
 
     printf "%s\n" "${files[@]}" | sort -u > "$temp_file.list"

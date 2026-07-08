@@ -1,10 +1,10 @@
 path.sh
+alias.sh
 colors.sh
 brew.sh
 chezmoi_edit.sh
 unlock.sh
 showcopy.sh
 ap.sh
-alias.sh
 translit.sh
-clean.sh
+python_aliases.sh

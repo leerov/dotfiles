@@ -53,7 +53,11 @@ EOF
 # Below is the ap format specification and the current code.
 # After I tell you what to change, generate ONLY the ap patch file.
 # Nothing else. Just the patch.
-#
+# If I write something to analyze, the analysis should not contain a patch.
+# The patch must be located inside a block of code like:
+# ```ap
+# *patch*
+# ```
 # === AP FORMAT SPECIFICATION ===
 #
 EOF
@@ -70,7 +74,11 @@ EOF
 # I have analyzed the project structure and code.
 # I am ready to generate AP patches.
 # Just tell me what to change.
-#
+# If I write something to analyze, the analysis should not contain a patch.
+# The patch must be located inside a block of code like:
+# ```ap
+# *patch*
+# ```
 # === PROJECT STRUCTURE (again) ===
 #
 EOF
