@@ -1,29 +1,39 @@
-general.import = ["~/.config/colors.toml"]
+{{ if eq .chezmoi.os "windows" -}}
+[terminal.shell]
+program = "C:\\msys64\\msys2_shell.cmd -defterm -no-start -ucrt64 -shell zsh"
 
-[window]
-decorations = "None"
-opacity = 0.666
-
-[window.dimensions]
-columns = 120
-lines = 30
-
-[colors.primary]
-background = "#1e1e2e" 
-
+#C:\\msys64\\usr\\bin\\bash.exe"
+#args = ["-lc", "exec /usr/bin/zsh -l"]
+# args = ["-lc", "export CHERE_INVOKING=1; exec /usr/bin/zsh -l"]
+# args = ["-lc", "CHERE_INVOKING=1 MSYSTEM=UCRT64 /usr/bin/bash -l"]
+# args = ["-lc", "export MSYSTEM=UCRT64; exec /usr/bin/zsh -l"]
+{{ else -}}
+[terminal]
+shell = { program = "/usr/bin/tmux", args = ["new-session", "-A", "-D", "-s", "main"] }
+{{ end -}}
 [font]
 size = 14
 
+[font.bold]
+family = "JetBrains Mono"
+style = "Bold"
+
+[font.bold_italic]
+family = "JetBrains Mono"
+style = "Bold Italic"
+
+[font.italic]
+family = "JetBrains Mono"
+style = "Italic"
+
 [font.normal]
-family = "Hack Nerd Font"
+family = "JetBrains Mono"
 style = "Regular"
 
-[terminal.shell]
-program = "/Users/harveyfa/bin/tmux"
-args = ["new-session", "-A", "-D", "-s", "main"]
-
 [scrolling]
-history = 1000
+history = 10000
 
-[env]
-TERM = "xterm-256color"
+[[keyboard.bindings]]
+action = "ToggleViMode"
+key = "Escape"
+mods = "Alt"
