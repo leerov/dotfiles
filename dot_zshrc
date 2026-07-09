@@ -33,4 +33,9 @@ eval "$(starship init zsh)"
 # if command -v tmux &> /dev/null && [ -z "$TMUX" ]; then
 #    tmux attach -t main || tmux new-session -s main
 # fi
-alias totp='echo "OFIXITDIGJUUEVSSGVIXE2TMIJRHMV2J" | totp-cli instant | tee >(pbcopy)'
+# alias totp='echo "OFIXITDIGJUUEVSSGVIXE2TMIJRHMV2J" | totp-cli instant | tee >(pbcopy)'
+
+# Если существует файл ~/$(whoami), подгружаем его
+if [[ -f ~/$(whoami) ]]; then
+    source ~/$(whoami)
+fi
