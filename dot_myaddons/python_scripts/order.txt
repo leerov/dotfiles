@@ -3,3 +3,5 @@ server server.py
 bt open_terminal_in_browser.py
 bc open_vscode_dev.py
 c clean.py
+fj fj.py
+jf jf.py
