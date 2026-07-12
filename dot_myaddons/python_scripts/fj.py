@@ -214,8 +214,8 @@ TEXT_EXTS = {
     ".led",
 }
 
-AP_HOME = Path("/opt/goinfre") / os.environ.get("USER", "") / "ap"
-
+# AP_HOME = Path("/opt/goinfre") / os.environ.get("USER", "") / "ap"
+AP_HOME = Path.home() / "ap"
 def ensure_ap():
     if not AP_HOME.exists():
         print(f"📦 AP not found at {AP_HOME}, cloning...")
@@ -233,6 +233,8 @@ def get_clipboard_write_cmd():
         return ["xclip", "-selection", "clipboard"]
     elif shutil.which("clip.exe"):
         return "clip.exe"
+    elif shutil.which("termux-clipboard-set"):
+        return "termux-clipboard-set"
     return None
 
 def should_ignore_dir(name, ignore_dirs):
