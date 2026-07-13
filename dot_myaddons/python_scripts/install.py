@@ -35,7 +35,7 @@ def ensure_brew():
     run(f"bash -c 'source {brew_script} && brewSetup'", check=False)
 
     user = os.environ.get("USER", "")
-    brew_p wqath = f"/opt/goinfre/{user}/homebrew/bin"
+    brew_path = f"/opt/goinfre/{user}/homebrew/bin"
     if os.path.exists(brew_path):
         os.environ["PATH"] = brew_path + ":" + os.environ.get("PATH", "")
 
