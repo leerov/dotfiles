@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Установщик необходимых инструментов для окружения.
-Устанавливает только font-hack-nerd-font, Neovim и Starship.
+Устанавливает font-hack-nerd-font, Neovim и Starship.
 """
 import subprocess
 import sys
@@ -38,7 +38,6 @@ def ensure_brew():
     print("🍺 Installing/activating Homebrew via brew.sh...")
     run(f"bash -c 'source {brew_script} && brewSetup'", check=False)
 
-    # После установки добавляем путь к brew в PATH
     user = os.environ.get("USER", "")
     brew_path = f"/opt/goinfre/{user}/homebrew/bin"
     if os.path.exists(brew_path):
@@ -58,10 +57,13 @@ def brew_cask_install(packages):
     run(f"brew install --cask {packages_str}")
 
 def download_neovim():
-    """Скачивает последнюю стабильную версию Neovim для macOS и распаковывает в ~/nvim-macos-x86_64"""
+    """Скачивает последнюю стабильную версию Neovim для macOS и распаковывает в ~/nvim-macos-x86_64,
+    затем создаёт симлинк ~/bin/nvim."""
     target_dir = os.path.expanduser("~/nvim-macos-x86_64")
     if os.path.exists(target_dir):
         print(f"✅ Neovim already exists at {target_dir}")
+        # Всё равно создадим ссылку (на случай, если её нет)
+        create_nvim_symlink(target_dir)
         return
 
     print("📦 Downloading Neovim...")
@@ -89,49 +91,41 @@ def download_neovim():
                     return
             else:
                 os.rename(extracted, target_dir)
+            print(f"✅ Neovim extracted to {target_dir}")
+            create_nvim_symlink(target_dir)
         except Exception as e:
             print(f"❌ Failed to extract Neovim: {e}")
         finally:
             os.unlink(tmp.name)
 
-def download_starship():
-    """Скачивает бинарник Starship и помещает в ~/bin/starship (перезаписывает, если уже существует)"""
+def create_nvim_symlink(nvim_dir):
+    """Создаёт символическую ссылку ~/bin/nvim -> nvim_dir/bin/nvim"""
     bin_dir = os.path.expanduser("~/bin")
     os.makedirs(bin_dir, exist_ok=True)
-    target = os.path.join(bin_dir, "starship")
+    link_path = os.path.join(bin_dir, "nvim")
+    target = os.path.join(nvim_dir, "bin", "nvim")
 
-    # Если файл существует, удаляем его для принудительной перезаписи
-    if os.path.exists(target):
-        print(f"🔄 Starship already exists, will re-download (overwrite)")
-        try:
-            os.remove(target)
-        except Exception as e:
-            print(f"⚠️ Could not remove old starship: {e}")
-            return
+    if not os.path.exists(target):
+        print(f"⚠️ Neovim binary not found at {target}, skipping symlink")
+        return
 
-    print("📦 Downloading Starship...")
-    url = "https://github.com/starship/starship/releases/latest/download/starship-x86_64-apple-darwin.tar.gz"
-    with tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False) as tmp:
-        try:
-            urllib.request.urlretrieve(url, tmp.name)
-        except Exception as e:
-            print(f"❌ Failed to download Starship: {e}")
-            return
+    # Удаляем старую ссылку/файл, если есть
+    if os.path.exists(link_path) or os.path.islink(link_path):
+        os.remove(link_path)
 
-        print("📦 Extracting Starship...")
-        try:
-            with tarfile.open(tmp.name, "r:gz") as tar:
-                for member in tar.getmembers():
-                    if member.name == "starship":
-                        member.name = os.path.basename(member.name)
-                        tar.extract(member, path=bin_dir)
-                        break
-            os.chmod(target, os.stat(target).st_mode | stat.S_IEXEC)
-            print(f"✅ Starship installed to {target}")
-        except Exception as e:
-            print(f"❌ Failed to extract Starship: {e}")
-        finally:
-            os.unlink(tmp.name)
+    os.symlink(target, link_path)
+    print(f"🔗 Symlink created: {link_path} -> {target}")
+
+def install_starship():
+    """Устанавливает Starship через официальный установщик в ~/bin"""
+    bin_dir = os.path.expanduser("~/bin")
+    os.makedirs(bin_dir, exist_ok=True)
+
+    # Проверяем, установлен ли уже starship (но для надёжности переустановим)
+    print("🚀 Installing Starship via official installer...")
+    cmd = f"curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir {bin_dir} -y"
+    run(cmd, check=True)
+    print("✅ Starship installed")
 
 def main():
     if platform.system() != "Darwin":
@@ -147,14 +141,17 @@ def main():
     # 2. Установка шрифта через brew cask
     brew_cask_install(["font-hack-nerd-font"])
 
-    # 3. Скачивание Neovim и Starship напрямую
+    # 3. Скачивание Neovim
     download_neovim()
-    download_starship()
+
+    # 4. Установка Starship
+    install_starship()
 
     print("✅ Installation complete!")
     print("📝 Next steps:")
     print("  - Restart your shell or run 'source ~/.zshrc'.")
     print("  - You may need to set up your terminal to use the font.")
+    print("  - Check that 'nvim' and 'starship' are in your PATH (e.g., ~/bin).")
 
 if __name__ == "__main__":
     main()
