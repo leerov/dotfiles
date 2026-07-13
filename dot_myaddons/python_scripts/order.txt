@@ -5,3 +5,4 @@ bc open_vscode_dev.py
 c clean.py
 fj fj.py
 jf jf.py
+install install.py
