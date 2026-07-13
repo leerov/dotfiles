@@ -9,10 +9,10 @@ import os
 import shutil
 import platform
 
-def run(cmd, check=True):
+def run(cmd, check=True, cwd=None):
     print(f"⚙️  Running: {cmd}")
     try:
-        subprocess.run(cmd, shell=True, check=check)
+        subprocess.run(cmd, shell=True, check=check, cwd=cwd)
     except subprocess.CalledProcessError as e:
         print(f"❌ Error: {e}")
         sys.exit(1)
@@ -35,7 +35,7 @@ def ensure_brew():
     run(f"bash -c 'source {brew_script} && brewSetup'", check=False)
 
     user = os.environ.get("USER", "")
-    brew_path = f"/opt/goinfre/{user}/homebrew/bin"
+    brew_p wqath = f"/opt/goinfre/{user}/homebrew/bin"
     if os.path.exists(brew_path):
         os.environ["PATH"] = brew_path + ":" + os.environ.get("PATH", "")
 
