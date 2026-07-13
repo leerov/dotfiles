@@ -10,7 +10,6 @@ import shutil
 import platform
 import urllib.request
 import tarfile
-import zipfile
 import tempfile
 import stat
 
@@ -28,32 +27,63 @@ def run(cmd, check=True, capture=False):
             return None
         sys.exit(1)
 
-def run_with_brew(cmd):
-    """Выполняет команду в окружении с активированным Homebrew."""
-    brew_script = os.path.expanduser("~/.myaddons/zsh_scripts/brew.sh")
-    if not os.path.exists(brew_script):
-        print("⚠️ brew.sh not found, skipping brew commands")
-        return None
-    full_cmd = f"source {brew_script} && brewActivate && {cmd}"
-    return run(f"bash -c '{full_cmd}'", check=False)
-
 def is_installed(cmd):
     return shutil.which(cmd) is not None
+
+def ensure_brew():
+    """Убеждается, что Homebrew установлен и активирован."""
+    if is_installed("brew"):
+        print("✅ Homebrew already installed")
+        return True
+
+    brew_script = os.path.expanduser("~/.myaddons/zsh_scripts/brew.sh")
+    if not os.path.exists(brew_script):
+        print("❌ brew.sh not found. Please ensure dotfiles are applied correctly.")
+        return False
+
+    print("🍺 Installing/activating Homebrew via brew.sh...")
+    # Вызываем brewSetup, который установит brew при необходимости
+    result = run(f"bash -c 'source {brew_script} && brewSetup'", check=False)
+    if result is None or not is_installed("brew"):
+        print("❌ Failed to set up Homebrew")
+        return False
+
+    print("✅ Homebrew is ready")
+    return True
 
 def brew_install(packages):
     if not packages:
         return
-    packages_str = " ".join(packages)
-    run_with_brew(f"brew install {packages_str}")
+    # Фильтруем уже установленные пакеты
+    to_install = []
+    for pkg in packages:
+        if not is_installed(pkg):
+            to_install.append(pkg)
+        else:
+            print(f"✅ {pkg} already installed")
+    if not to_install:
+        return
+    packages_str = " ".join(to_install)
+    # После ensure_brew, brew должен быть в PATH
+    run(f"brew install {packages_str}")
 
 def brew_cask_install(packages):
     if not packages:
         return
-    packages_str = " ".join(packages)
-    run_with_brew(f"brew install --cask {packages_str}")
+    to_install = []
+    for pkg in packages:
+        # Для cask сложно проверить наличие, просто пробуем установить
+        to_install.append(pkg)
+    if not to_install:
+        return
+    packages_str = " ".join(to_install)
+    run(f"brew install --cask {packages_str}")
 
 def install_pip_packages(packages):
     for pkg in packages:
+        if is_installed(f"pip3 show {pkg}"):
+            print(f"✅ {pkg} already installed")
+            continue
         run(f"pip3 install {pkg}")
 
 def clone_repo(repo_url, dest):
@@ -92,7 +122,6 @@ def download_neovim():
         return
 
     print("📦 Downloading Neovim...")
-    # Используем известный стабильный релиз (можно заменить на последний, но для надёжности фиксируем)
     url = "https://github.com/neovim/neovim/releases/download/stable/nvim-macos-x86_64.tar.gz"
     with tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False) as tmp:
         try:
@@ -105,10 +134,9 @@ def download_neovim():
         try:
             with tarfile.open(tmp.name, "r:gz") as tar:
                 tar.extractall(path=os.path.dirname(target_dir))
-            # Переименовываем извлечённую папку (обычно она называется nvim-macos-x86_64)
+            # Переименовываем извлечённую папку
             extracted = os.path.join(os.path.dirname(target_dir), "nvim-macos-x86_64")
             if not os.path.exists(extracted):
-                # может быть другое имя, поищем
                 import glob
                 dirs = glob.glob(os.path.join(os.path.dirname(target_dir), "nvim-*"))
                 if dirs:
@@ -117,7 +145,7 @@ def download_neovim():
                     print("❌ Could not find extracted Neovim directory")
                     return
             else:
-                os.rename(extracted, target_dir)  # если уже существует, но мы проверили выше
+                os.rename(extracted, target_dir)
         except Exception as e:
             print(f"❌ Failed to extract Neovim: {e}")
         finally:
@@ -133,7 +161,6 @@ def download_starship():
         return
 
     print("📦 Downloading Starship...")
-    # Определяем архитектуру (для macOS universal)
     url = "https://github.com/starship/starship/releases/latest/download/starship-x86_64-apple-darwin.tar.gz"
     with tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False) as tmp:
         try:
@@ -145,13 +172,11 @@ def download_starship():
         print("📦 Extracting Starship...")
         try:
             with tarfile.open(tmp.name, "r:gz") as tar:
-                # Ищем файл starship
                 for member in tar.getmembers():
                     if member.name == "starship":
                         member.name = os.path.basename(member.name)
                         tar.extract(member, path=bin_dir)
                         break
-            # Делаем исполняемым
             os.chmod(target, os.stat(target).st_mode | stat.S_IEXEC)
         except Exception as e:
             print(f"❌ Failed to extract Starship: {e}")
@@ -163,7 +188,7 @@ def install_code_server():
         print("✅ code-server already installed")
         return
     if not is_installed("npm"):
-        print("⚠️ npm not found, installing via brew...")
+        print("⚠️ npm not found, installing node via brew...")
         brew_install(["node"])
     run("npm install -g code-server")
 
@@ -173,35 +198,42 @@ def main():
 
     print("🚀 Starting installation of development tools...")
 
-    # Сначала установим основные пакеты через brew (активируем brew через brew.sh)
+    # 1. Убедиться, что Homebrew установлен и активирован
+    if not ensure_brew():
+        print("❌ Cannot proceed without Homebrew")
+        sys.exit(1)
+
+    # 2. Установка пакетов через brew
     brew_packages = [
-        "tmux", "git", "zsh",
-        "fzf", "ripgrep", "lazygit",
-        "lua-language-server", "pyright",
-        "node", "python3"
+        "tmux", "git", "zsh", "fzf", "ripgrep", "lazygit",
+        "lua-language-server", "pyright", "node", "python3"
     ]
     brew_install(brew_packages)
     brew_cask_install(["font-hack-nerd-font"])
 
-    # Устанавливаем Python пакеты
+    # 3. Python пакеты
     pip_packages = ["flask", "flask-sock"]
     install_pip_packages(pip_packages)
 
-    # Скачиваем Neovim и Starship напрямую
+    # 4. Скачивание Neovim и Starship напрямую
     download_neovim()
     download_starship()
 
+    # 5. Дополнительные инструменты
     setup_tpm()
     setup_ap()
     install_code_server()
 
+    # 6. Установка chezmoi (если ещё нет)
     if not is_installed("chezmoi"):
         print("📦 Installing chezmoi...")
-        run("brew install chezmoi")  # можно тоже через brew_install, но оставим так
+        brew_install(["chezmoi"])
 
+    # 7. Применение dotfiles
     print("🔄 Applying dotfiles with chezmoi...")
     run("chezmoi apply", check=False)
 
+    # 8. Установка плагинов Neovim
     install_neovim_plugins()
 
     print("✅ Installation complete!")
