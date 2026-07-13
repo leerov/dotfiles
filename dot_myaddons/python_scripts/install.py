@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
 """
 Установщик необходимых инструментов для окружения.
-Устанавливает font-hack-nerd-font, Neovim (в ~/nvim-macos-x86_64 с симлинком ~/bin/nvim) и Starship (в ~/bin).
+Устанавливает font-hack-nerd-font, Neovim (в ~/nvim-{arch} с симлинком ~/bin/nvim) и Starship (в ~/bin).
 """
 import subprocess
 import sys
 import os
 import shutil
 import platform
-import urllib.request
-import tarfile
-import tempfile
-import stat
-import glob
 
 def run(cmd, check=True):
     print(f"⚙️  Running: {cmd}")
@@ -59,13 +54,26 @@ def brew_cask_install(packages):
 
 def download_neovim():
     """
-    Скачивает последнюю стабильную версию Neovim для macOS x86_64,
-    распаковывает в ~/nvim-macos-x86_64 и создаёт симлинк ~/bin/nvim.
+    Скачивает последнюю стабильную версию Neovim для macOS (определяет архитектуру),
+    распаковывает в ~/ и создаёт симлинк ~/bin/nvim.
     """
     home = os.path.expanduser("~")
-    target_dir = os.path.join(home, "nvim-macos-x86_64")
     bin_dir = os.path.join(home, "bin")
     os.makedirs(bin_dir, exist_ok=True)
+
+    # Определяем архитектуру
+    arch = platform.machine().lower()
+    if arch in ("x86_64", "amd64"):
+        nvim_arch = "x86_64"
+    elif arch in ("arm64", "aarch64"):
+        nvim_arch = "arm64"
+    else:
+        print(f"⚠️ Unknown architecture '{arch}', defaulting to x86_64")
+        nvim_arch = "x86_64"
+
+    target_dir = os.path.join(home, f"nvim-macos-{nvim_arch}")
+    archive_name = f"nvim-macos-{nvim_arch}.tar.gz"
+    url = f"https://github.com/neovim/neovim/releases/latest/download/{archive_name}"
 
     # Если папка уже существует, не перезаписываем, но проверим ссылку
     if os.path.exists(target_dir):
@@ -73,41 +81,25 @@ def download_neovim():
         create_nvim_symlink(target_dir)
         return
 
-    print("📦 Downloading Neovim...")
-    url = "https://github.com/neovim/neovim/releases/download/stable/nvim-macos-x86_64.tar.gz"
-    with tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False) as tmp:
-        tmp_path = tmp.name
-        try:
-            urllib.request.urlretrieve(url, tmp_path)
-        except Exception as e:
-            print(f"❌ Failed to download Neovim: {e}")
-            return
+    print(f"📦 Downloading Neovim ({nvim_arch}) via curl...")
+    # Скачиваем архив в домашнюю директорию
+    run(f"curl -LO {url}", cwd=home, check=True)
 
-        print("📦 Extracting Neovim...")
-        try:
-            with tarfile.open(tmp_path, "r:gz") as tar:
-                tar.extractall(path=home)
-            # После распаковки в home появится папка типа nvim-macos-x86_64 (или nvim-...)
-            # Убедимся, что она называется именно так
-            extracted = os.path.join(home, "nvim-macos-x86_64")
-            if not os.path.exists(extracted):
-                # Возможно, имя немного отличается (например, nvim-macos-arm64)
-                dirs = glob.glob(os.path.join(home, "nvim-*"))
-                if dirs:
-                    # Берём первую найденную папку и переименовываем
-                    old = dirs[0]
-                    os.rename(old, extracted)
-                    print(f"✅ Renamed {old} to {extracted}")
-                else:
-                    print("❌ Could not find extracted Neovim directory")
-                    return
-            else:
-                print(f"✅ Neovim extracted to {extracted}")
-            create_nvim_symlink(extracted)
-        except Exception as e:
-            print(f"❌ Failed to extract Neovim: {e}")
-        finally:
-            os.unlink(tmp_path)
+    # Проверяем, что архив скачался
+    archive_path = os.path.join(home, archive_name)
+    if not os.path.exists(archive_path):
+        print(f"❌ Failed to download {archive_name}")
+        return
+
+    print(f"📦 Extracting Neovim to {home}...")
+    run(f"tar -xzf {archive_path} -C {home}", check=True)
+
+    # Удаляем архив
+    os.remove(archive_path)
+    print(f"✅ Neovim extracted to {target_dir}")
+
+    # Создаём симлинк
+    create_nvim_symlink(target_dir)
 
 def create_nvim_symlink(nvim_dir):
     """Создаёт символическую ссылку ~/bin/nvim -> nvim_dir/bin/nvim"""
@@ -151,7 +143,7 @@ def main():
     # 2. Шрифт
     brew_cask_install(["font-hack-nerd-font"])
 
-    # 3. Neovim (в ~/nvim-macos-x86_64 + симлинк)
+    # 3. Neovim (скачивание через curl, распаковка в ~, симлинк)
     download_neovim()
 
     # 4. Starship
