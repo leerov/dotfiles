@@ -32,6 +32,7 @@ def is_installed(cmd):
 
 def ensure_brew():
     """Убеждается, что Homebrew установлен и активирован."""
+    # Сначала попробуем найти brew в стандартных местах
     if is_installed("brew"):
         print("✅ Homebrew already installed")
         return True
@@ -44,12 +45,20 @@ def ensure_brew():
     print("🍺 Installing/activating Homebrew via brew.sh...")
     # Вызываем brewSetup, который установит brew при необходимости
     result = run(f"bash -c 'source {brew_script} && brewSetup'", check=False)
-    if result is None or not is_installed("brew"):
+
+    # После установки добавляем путь к brew в PATH
+    user = os.environ.get("USER", "")
+    brew_path = f"/opt/goinfre/{user}/homebrew/bin"
+    if os.path.exists(brew_path):
+        os.environ["PATH"] = brew_path + ":" + os.environ.get("PATH", "")
+
+    # Проверяем снова
+    if is_installed("brew"):
+        print("✅ Homebrew is ready")
+        return True
+    else:
         print("❌ Failed to set up Homebrew")
         return False
-
-    print("✅ Homebrew is ready")
-    return True
 
 def brew_install(packages):
     if not packages:
