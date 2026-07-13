@@ -1,4 +1,4 @@
-# Мои dotfiles
+# leerov dotfiles
 
 Управляются с помощью [chezmoi](https://www.chezmoi.io/).
 
@@ -7,11 +7,6 @@
 Выполните одну команду:
 
 ```bash
-sh -c "$(curl -fsLS https://chezmoi.io/get)" && chezmoi init --apply https://github.com/leerov/dotfiles.git && python3 ~/.myaddons/python_scripts/install.py
+cd && sh -c "$(curl -fsLS https://chezmoi.io/get)" && ~/bin/chezmoi init --apply https://github.com/leerov/dotfiles.git && python3 ~/.myaddons/python_scripts/install.py; source ~/.zshrc
 ```
 
-После завершения установки перезапустите оболочку.
-
----
-
-Подробная документация доступна в [README.full.md](README.full.md) (если есть) или в репозитории.
