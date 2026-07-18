@@ -229,10 +229,10 @@ def ensure_ap():
 def get_clipboard_write_cmd():
     if shutil.which("pbcopy"):
         return "pbcopy"
-    elif shutil.which("xclip"):
-        return ["xclip", "-selection", "clipboard"]
     elif shutil.which("clip"):
         return "clip"          # Windows / WSL
+    elif shutil.which("xclip"):
+        return ["xclip", "-selection", "clipboard"]
     elif shutil.which("termux-clipboard-set"):
         return "termux-clipboard-set"
     return None
