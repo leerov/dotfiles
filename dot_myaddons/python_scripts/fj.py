@@ -231,8 +231,8 @@ def get_clipboard_write_cmd():
         return "pbcopy"
     elif shutil.which("xclip"):
         return ["xclip", "-selection", "clipboard"]
-    elif shutil.which("clip.exe"):
-        return "clip.exe"
+    elif shutil.which("clip"):
+        return "clip"          # Windows / WSL
     elif shutil.which("termux-clipboard-set"):
         return "termux-clipboard-set"
     return None
