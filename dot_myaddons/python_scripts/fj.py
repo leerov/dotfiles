@@ -10,140 +10,28 @@ from pathlib import Path
 MAX_FILE_SIZE = 1_000_000  # 1 МБ
 
 IGNORE_DIRS = [
-    ".git",
-    "node_modules",
-    "__pycache__",
-    ".venv",
-    "venv",
-    "build",
-    "dist",
-    ".idea",
-    ".vscode",
-    "target",
-    ".pytest_cache",
-    ".mypy_cache",
-    ".tox",
-    ".eggs",
-    ".gradle",
-    ".next",
-    "out",
-    ".output",
-    ".serverless",
-    ".terraform",
-    ".parcel-cache",
-    ".webpack",
-    ".sass-cache",
-    ".vite",
-    ".yarn",
-    ".pnpm-store",
-    ".bun",
-    "_build",
-    "deps",
-    ".gleam",
-    "_gleam_build",
-    ".mix",
-    ".cargo",
-    ".rustup",
-    ".stack-work",
-    ".hie-bios",
-    ".cabal-sandbox",
-    ".cabal",
-    ".stack",
-    ".nix",
-    ".direnv",
-    ".env",
-    ".virtualenv",
-    ".pyenv",
-    ".pip",
-    ".pypoetry",
-    ".conda",
-    ".julia",
-    ".Rproj.user",
-    ".rstudio",
-    ".kotlin",
-    ".clj-kondo",
-    ".lsp",
-    ".cljr",
-    ".cpcache",
-    ".shadow-cljs",
-    ".figx",
-    ".nrepl",
-    ".boot",
-    ".lein",
-    ".m2",
-    ".sbt",
-    ".eclipse",
-    ".project",
-    ".classpath",
-    ".settings",
-    ".metadata",
-    ".DS_Store",
-    ".Trashes",
-    ".fseventsd",
-    ".TemporaryItems",
-    ".Trash",
-    ".localized",
-    ".apdisk",
-    ".AppleDouble",
-    ".LSOverride",
-    ".DocumentRevisions-V100",
-    ".PKInstallSandboxManager",
-    ".com.apple.timemachine.supported",
-    ".com.apple.timemachine.donotpresent",
-    ".vol",
-    ".cddb",
-    ".cpan",
-    ".cpcpan",
-    ".perl",
-    ".go",
-    ".gopath",
-    ".godoc",
-    ".glide",
-    ".dep",
-    ".vendor",
-    ".mod",
-    ".sum",
-    ".work",
-    ".bin",
-    ".pkg",
-    ".npm",
-    ".nvm",
-    ".deno",
-    ".node",
-    ".asdf",
-    ".sdkman",
-    ".jabba",
-    ".coursier",
-    ".ivy2",
-    ".netbeans",
-    ".clion",
-    ".pycharm",
-    ".intellij",
-    ".rubymine",
-    ".webstorm",
-    ".phpstorm",
-    ".goland",
-    ".appcode",
-    ".datagrip",
-    ".rider",
-    ".android",
-    ".androidstudio",
-    ".xcode",
-    ".swiftpm",
-    ".lldb",
-    ".gdb",
-    ".clang",
-    ".cmake",
-    ".ninja",
-    ".conan",
-    ".vcpkg",
-    ".bazel",
-    ".pants",
-    ".please",
-    ".mage",
-    ".task",
-    ".just",
-    ".make",
+    ".git", "node_modules", "__pycache__", ".venv", "venv", "build", "dist",
+    ".idea", ".vscode", "target", ".pytest_cache", ".mypy_cache", ".tox",
+    ".eggs", ".gradle", ".next", "out", ".output", ".serverless", ".terraform",
+    ".parcel-cache", ".webpack", ".sass-cache", ".vite", ".yarn", ".pnpm-store",
+    ".bun", "_build", "deps", ".gleam", "_gleam_build", ".mix", ".cargo",
+    ".rustup", ".stack-work", ".hie-bios", ".cabal-sandbox", ".cabal", ".stack",
+    ".nix", ".direnv", ".env", ".virtualenv", ".pyenv", ".pip", ".pypoetry",
+    ".conda", ".julia", ".Rproj.user", ".rstudio", ".kotlin", ".clj-kondo",
+    ".lsp", ".cljr", ".cpcache", ".shadow-cljs", ".figx", ".nrepl", ".boot",
+    ".lein", ".m2", ".sbt", ".eclipse", ".project", ".classpath", ".settings",
+    ".metadata", ".DS_Store", ".Trashes", ".fseventsd", ".TemporaryItems",
+    ".Trash", ".localized", ".apdisk", ".AppleDouble", ".LSOverride",
+    ".DocumentRevisions-V100", ".PKInstallSandboxManager",
+    ".com.apple.timemachine.supported", ".com.apple.timemachine.donotpresent",
+    ".vol", ".cddb", ".cpan", ".cpcpan", ".perl", ".go", ".gopath", ".godoc",
+    ".glide", ".dep", ".vendor", ".mod", ".sum", ".work", ".bin", ".pkg",
+    ".npm", ".nvm", ".deno", ".node", ".asdf", ".sdkman", ".jabba", ".coursier",
+    ".ivy2", ".netbeans", ".clion", ".pycharm", ".intellij", ".rubymine",
+    ".webstorm", ".phpstorm", ".goland", ".appcode", ".datagrip", ".rider",
+    ".android", ".androidstudio", ".xcode", ".swiftpm", ".lldb", ".gdb",
+    ".clang", ".cmake", ".ninja", ".conan", ".vcpkg", ".bazel", ".pants",
+    ".please", ".mage", ".task", ".just", ".make",
 ]
 
 TEXT_EXTS = {
@@ -179,43 +67,23 @@ TEXT_EXTS = {
     ".qmd", ".rmd", ".Rnw",
     ".stan", ".bugs", ".jags",
     ".tf", ".tfvars", ".hcl",
-    ".sls",
-    ".pp",
-    ".erb",
-    ".ps1", ".psm1", ".psd1",
-    ".j2",
-    ".txt", ".text",
-    ".nfo", ".readme", "README", "CHANGELOG", "LICENSE", "CONTRIBUTING",
-    ".adoc", ".asciidoc",
-    ".org",
-    ".wiki",
-    ".rtf",
-    ".csv", ".tsv", ".psv",
-    ".ics",
-    ".desktop",
-    ".service", ".timer", ".socket", ".target",
-    ".cron", ".tab", "crontab",
-    ".sed", ".awk",
-    ".regex",
-    ".prolog", ".pl", ".p",
-    ".env",
-    "Procfile",
-    "Gemfile", "Gemfile.lock",
-    "Rakefile",
-    "Cargo.toml", "Cargo.lock",
-    "go.mod", "go.sum",
+    ".sls", ".pp", ".erb",
+    ".ps1", ".psm1", ".psd1", ".j2",
+    ".txt", ".text", ".nfo", ".readme", "README", "CHANGELOG", "LICENSE", "CONTRIBUTING",
+    ".adoc", ".asciidoc", ".org", ".wiki", ".rtf",
+    ".csv", ".tsv", ".psv", ".ics",
+    ".desktop", ".service", ".timer", ".socket", ".target",
+    ".cron", ".tab", "crontab", ".sed", ".awk", ".regex",
+    ".prolog", ".p", ".env", "Procfile", "Gemfile", "Gemfile.lock", "Rakefile",
+    "Cargo.toml", "Cargo.lock", "go.mod", "go.sum",
     "requirements.txt", "Pipfile", "Pipfile.lock", "pyproject.toml", "setup.py", "setup.cfg",
-    ".pre-commit-config.yaml",
-    ".eslintrc", ".prettierrc", ".babelrc",
-    ".patch", ".diff",
-    ".sig", ".asc",
-    ".gcode",
-    ".scad",
-    ".led",
+    ".pre-commit-config.yaml", ".eslintrc", ".prettierrc", ".babelrc",
+    ".patch", ".diff", ".sig", ".asc", ".gcode", ".scad", ".led",
 }
 
 # AP_HOME = Path("/opt/goinfre") / os.environ.get("USER", "") / "ap"
 AP_HOME = Path.home() / "ap"
+
 def ensure_ap():
     if not AP_HOME.exists():
         print(f"📦 AP not found at {AP_HOME}, cloning...")
@@ -375,22 +243,42 @@ def main():
     output_parts.append("# The bash block should follow immediately after the patch.\n")
     output_parts.append("# === END ===\n")
 
-    # Используем utf-8-sig (с BOM), чтобы Windows clip.exe корректно распознал кодировку
-    full_data = "".join(output_parts).encode("utf-8-sig")
+    # Собираем весь текст в одну строку
+    full_text = "".join(output_parts)
     clip_cmd = get_clipboard_write_cmd()
+    
     if clip_cmd is None:
         print("❌ No clipboard command found")
         sys.exit(1)
 
-    # Передаём данные напрямую в процесс буфера обмена без временного файла
+    # Определяем имя команды (строка или первый элемент списка)
+    cmd_name = clip_cmd if isinstance(clip_cmd, str) else clip_cmd[0]
+
+    # КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ:
+    # Windows clip.exe НЕ понимает UTF-8. Он корректно принимает только UTF-16LE.
+    # Остальные утилиты (pbcopy, xclip, termux) отлично работают с обычным UTF-8.
+    if cmd_name == "clip":
+        encoding = "utf-16-le"
+    else:
+        encoding = "utf-8"
+
+    # Кодируем текст в байты с правильной кодировкой
+    full_data = full_text.encode(encoding)
+
+    # Передаём байты напрямую в процесс буфера обмена
+    # DEVNULL предотвращает зависания и вывод мусора в консоль
     proc = subprocess.Popen(
         clip_cmd if isinstance(clip_cmd, str) else clip_cmd,
-        stdin=subprocess.PIPE
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
     )
     proc.communicate(input=full_data)
+    
     if proc.returncode != 0:
         print("❌ Failed to copy to clipboard")
         sys.exit(1)
+        
     print("✅ Copied to clipboard: tree + instructions + ap.md + code contents")
 
 if __name__ == "__main__":
