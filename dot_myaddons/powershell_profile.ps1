@@ -11,18 +11,22 @@ if ($env:PATH -notlike "*$env:PYTHON_SCRIPTS*") {
     $env:PATH += ";$env:PYTHON_SCRIPTS"
 }
 
-# ---- Алиасы (функции) для основных скриптов ----
-function fj { python "$env:PYTHON_SCRIPTS\fj.py" $args }
-function jf { python "$env:PYTHON_SCRIPTS\jf.py" $args }
-function clean { python "$env:PYTHON_SCRIPTS\clean.py" $args }
-function client { python "$env:PYTHON_SCRIPTS\client.py" $args }
-function server { python "$env:PYTHON_SCRIPTS\server.py" $args }
-function sc { python "$env:PYTHON_SCRIPTS\showcopy.py" $args }
-
-# Открытие браузерных инструментов
-function bt { python "$env:PYTHON_SCRIPTS\open_terminal_browser.py" $args }
-function bc { python "$env:PYTHON_SCRIPTS\open_vscode_dev.py" $args }
-function bcs { python "$env:PYTHON_SCRIPTS\open_code_server.py" $args }
+# ---- Генерация алиасов (функций) из order.txt ----
+$orderFile = "$env:PYTHON_SCRIPTS\order.txt"
+if (Test-Path $orderFile) {
+    Get-Content $orderFile | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -and -not $line.StartsWith("#")) {
+            $parts = $line -split '\s+'
+            if ($parts.Count -ge 2) {
+                $aliasName = $parts[0]
+                $scriptFile = $parts[1]
+                $scriptPath = "$env:PYTHON_SCRIPTS\$scriptFile"
+                Set-Item -Path "function:\$aliasName" -Value "python `"$scriptPath`" `$args"
+            }
+        }
+    }
+}
 
 # ---- Дополнительные алиасы из .zshrc ----
 function v { nvim $args }
