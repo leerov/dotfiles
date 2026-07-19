@@ -375,8 +375,8 @@ def main():
     output_parts.append("# The bash block should follow immediately after the patch.\n")
     output_parts.append("# === END ===\n")
 
-    full_data = "".join(output_parts).encode("utf-8")
-
+    # Используем utf-8-sig (с BOM), чтобы Windows clip.exe корректно распознал кодировку
+    full_data = "".join(output_parts).encode("utf-8-sig")
     clip_cmd = get_clipboard_write_cmd()
     if clip_cmd is None:
         print("❌ No clipboard command found")
