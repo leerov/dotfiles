@@ -484,24 +484,32 @@ def draw_ui(stdscr):
     
     # Кэш для строк
     line_cache = {}
-    
     def update_line(y, x, text, attr=0, force=False):
         """Обновить строку только если она изменилась"""
         key = (y, x)
         if force or key not in line_cache or line_cache[key] != (text, attr):
             try:
-                stdscr.addstr(y, x, text, attr)
+                h, w = stdscr.getmaxyx()
+                if 0 <= y < h and 0 <= x < w:
+                    stdscr.move(y, x)
+                    stdscr.clrtoeol()
+                    stdscr.addnstr(y, x, text, w - x, attr)
                 line_cache[key] = (text, attr)
                 return True
-            except:
+            except Exception:
                 pass
         return False
-    
+
     start_time = time.time()
-    
+    prev_height, prev_width = stdscr.getmaxyx()
     while True:
         try:
             height, width = stdscr.getmaxyx()
+            if height != prev_height or width != prev_width:
+                stdscr.clear()
+                line_cache.clear()
+                prev_height, prev_width = height, width
+                state.dirty = True
             
             # Обновляем анимацию спиннера
             spinner_char = spinner.next()
@@ -622,6 +630,8 @@ def draw_ui(stdscr):
                 if cleaning and cleanup_thread and cleanup_thread.is_alive():
                     cleaner.running = False
                     cleanup_thread.join(timeout=2)
+                stdscr.clear()
+                stdscr.refresh()
                 break
             
             elif key == ord('c') or key == ord('C'):
@@ -678,8 +688,11 @@ def draw_ui(stdscr):
                 stdscr.addstr(height - 3, 2, f"Error: {str(e)}")
                 stdscr.refresh()
                 time.sleep(1)
-            except:
-                break
+            except Exception:
+                pass
+            stdscr.clear()
+            stdscr.refresh()
+            break
 
 
 def main():
