@@ -45,13 +45,9 @@ function r { . $PROFILE }
 # Редактирование профиля (открываем в Neovim)
 function edit-profile { nvim $PROFILE }
 
-# ---- Настройка приглашения (prompt) ----
-# Можно использовать starship, если установлен
+# ---- Настройка приглашения (prompt) через Starship ----
 if (Get-Command starship -ErrorAction SilentlyContinue) {
-    function prompt { starship prompt }
-} else {
-    # Простой вариант: показывает текущую папку
-    function prompt { "PS $($executionContext.SessionState.Path.CurrentLocation)> " }
+    Invoke-Expression (&starship init powershell)
 }
 
 # ---- Дополнительные настройки окружения ----
