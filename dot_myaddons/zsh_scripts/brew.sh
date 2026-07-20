@@ -2,8 +2,16 @@
 # lib/brew-functions.sh - Функции для управления Homebrew
 
 USER_NAME=$(whoami)
-GOINFRE_PATH="/opt/goinfre/$USER_NAME"
-BREW_PATH="$GOINFRE_PATH/homebrew"
+if [ -d "/opt/goinfre/$USER_NAME" ]; then
+    GOINFRE_PATH="/opt/goinfre/$USER_NAME"
+    BREW_PATH="$GOINFRE_PATH/homebrew"
+else
+    if [[ "$(uname -m)" == "arm64" ]]; then
+        BREW_PATH="/opt/homebrew"
+    else
+        BREW_PATH="/usr/local"
+    fi
+fi
 
 # Функция активации Homebrew
 function brewActivate {
@@ -11,36 +19,30 @@ function brewActivate {
         # 1. Активируем Homebrew
         eval "$("$BREW_PATH/bin/brew" shellenv)"
         
-        # 2. Настраиваем пути для Cask
-        export HOMEBREW_CASK_OPTS="--appdir=$GOINFRE_PATH/Applications --fontdir=$GOINFRE_PATH/Library/Fonts"
-        
-        # 3. Настраиваем кеш в goinfre
-        export HOMEBREW_CACHE="$BREW_PATH/cache"
-        
-        # 4. Оптимизации для 42
+        # 2. Оптимизации
         export HOMEBREW_NO_ANALYTICS=1
         export HOMEBREW_NO_AUTO_UPDATE=1
-        
-        # 5. Создаем необходимые директории
-        mkdir -p "$GOINFRE_PATH/Applications" 2>/dev/null
-        mkdir -p "$GOINFRE_PATH/Library/Fonts" 2>/dev/null
-        mkdir -p "$HOMEBREW_CACHE" 2>/dev/null
-        
-        # 6. Создаем симлинки для совместимости
-        if [ ! -L ~/Applications ] && [ ! -d ~/Applications ]; then
-            ln -sf "$GOINFRE_PATH/Applications" ~/Applications 2>/dev/null
+
+        # 3. Настройки специфичные для goinfre (Ecole 42)
+        if [ -n "$GOINFRE_PATH" ]; then
+            export HOMEBREW_CASK_OPTS="--appdir=$GOINFRE_PATH/Applications --fontdir=$GOINFRE_PATH/Library/Fonts"
+            export HOMEBREW_CACHE="$BREW_PATH/cache"
+            mkdir -p "$GOINFRE_PATH/Applications" 2>/dev/null
+            mkdir -p "$GOINFRE_PATH/Library/Fonts" 2>/dev/null
+            mkdir -p "$HOMEBREW_CACHE" 2>/dev/null
+            if [ ! -L ~/Applications ] && [ ! -d ~/Applications ]; then
+                ln -sf "$GOINFRE_PATH/Applications" ~/Applications 2>/dev/null
+            fi
+            if [ ! -L ~/Library/Fonts ] && [ ! -d ~/Library/Fonts ]; then
+                ln -sf "$GOINFRE_PATH/Library/Fonts" ~/Library/Fonts 2>/dev/null
+            fi
+            echo "📦 Cask приложения: $GOINFRE_PATH/Applications"
+            echo "🗄️  Кеш brew: $HOMEBREW_CACHE"
         fi
-        
-        if [ ! -L ~/Library/Fonts ] && [ ! -d ~/Library/Fonts ]; then
-            ln -sf "$GOINFRE_PATH/Library/Fonts" ~/Library/Fonts 2>/dev/null
-        fi
-        
-        # 7. Исправляем права для zsh автодополнения
+
+        # 4. Исправляем права для zsh автодополнения
         chmod -R go-w "$(brew --prefix)/share/zsh" 2>/dev/null || true
-        
         echo "✅ Homebrew активирован"
-        echo "📦 Cask приложения: $GOINFRE_PATH/Applications"
-        echo "🗄️  Кеш brew: $HOMEBREW_CACHE"
         return 0
     else
         echo "❌ Homebrew не найден по пути: $BREW_PATH"
@@ -58,12 +60,18 @@ function brewInstall {
     fi
     
     echo "Установка Homebrew..."
-    cd "$GOINFRE_PATH"
+    local START_DIR="$(pwd)"
+    if [ -n "$GOINFRE_PATH" ]; then
+        cd "$GOINFRE_PATH" || return 1
+    else
+        cd "/tmp" || return 1
+    fi
     git clone https://github.com/Homebrew/brew homebrew
     eval "$("$BREW_PATH/bin/brew" shellenv)"
     brew update --force --quiet
     chmod -R go-w "$(brew --prefix)/share/zsh"
     brew install lcov
+    cd "$START_DIR"
     echo "Homebrew успешно установлен"
 }
 
@@ -88,8 +96,12 @@ function brewSetup {
     fi
     
     echo "Быстрая установка Homebrew..."
-    cd "$GOINFRE_PATH"
-    
+    local START_DIR="$(pwd)"
+    if [ -n "$GOINFRE_PATH" ]; then
+        cd "$GOINFRE_PATH" || return 1
+    else
+        cd "/tmp" || return 1
+    fi
     # Оптимальный вариант: неглубокое клонирование
     git clone --depth=1 https://github.com/Homebrew/brew homebrew
     
@@ -103,8 +115,10 @@ function brewSetup {
         echo "✓ Доступны: brew install, brew search, brew update и другие команды"
     else
         echo "❌ Что-то пошло не так"
+        cd "$START_DIR"
         return 1
     fi
+    cd "$START_DIR"
 }
 
 # Функция переустановки
@@ -117,3 +131,14 @@ function brewReinstall {
 if [[ ":$PATH:" != *":$BREW_PATH/bin:"* ]] && [ -d "$BREW_PATH/bin" ]; then
     export PATH="$BREW_PATH/bin:$PATH"
 fi
+# Обертка для автоматической установки при вызове brew
+brew() {
+    if [ ! -f "$BREW_PATH/bin/brew" ]; then
+        echo "🍺 Homebrew не установлен. Автоматически запускаю brewSetup..."
+        brewSetup
+    fi
+    if [[ ":$PATH:" != *":$BREW_PATH/bin:"* ]]; then
+        eval "$("$BREW_PATH/bin/brew" shellenv)" 2>/dev/null
+    fi
+    command brew "$@"
+}
