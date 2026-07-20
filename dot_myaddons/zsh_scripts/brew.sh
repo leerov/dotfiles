@@ -5,44 +5,45 @@ USER_NAME=$(whoami)
 if [ -d "/opt/goinfre/$USER_NAME" ]; then
     GOINFRE_PATH="/opt/goinfre/$USER_NAME"
     BREW_PATH="$GOINFRE_PATH/homebrew"
+
+    # Глобальные настройки для goinfre (Ecole 42)
+    export HOMEBREW_CASK_OPTS="--appdir=$GOINFRE_PATH/Applications --fontdir=$GOINFRE_PATH/Library/Fonts"
+    export HOMEBREW_CACHE="$BREW_PATH/cache"
+    export HOMEBREW_NO_ANALYTICS=1
+    export HOMEBREW_NO_AUTO_UPDATE=1
+
+    # Создаем необходимые директории сразу при загрузке скрипта
+    mkdir -p "$GOINFRE_PATH/Applications" 2>/dev/null
+    mkdir -p "$GOINFRE_PATH/Library/Fonts" 2>/dev/null
+    mkdir -p "$HOMEBREW_CACHE" 2>/dev/null
+
+    # Создаем симлинки для совместимости
+    if [ ! -L ~/Applications ] && [ ! -d ~/Applications ]; then
+        ln -sf "$GOINFRE_PATH/Applications" ~/Applications 2>/dev/null
+    fi
+    if [ ! -L ~/Library/Fonts ] && [ ! -d ~/Library/Fonts ]; then
+        ln -sf "$GOINFRE_PATH/Library/Fonts" ~/Library/Fonts 2>/dev/null
+    fi
 else
     if [[ "$(uname -m)" == "arm64" ]]; then
         BREW_PATH="/opt/homebrew"
     else
         BREW_PATH="/usr/local"
     fi
+    export HOMEBREW_NO_ANALYTICS=1
+    export HOMEBREW_NO_AUTO_UPDATE=1
 fi
 
 # Функция активации Homebrew
 function brewActivate {
     if [ -d "$BREW_PATH" ]; then
-        # 1. Активируем Homebrew
         eval "$("$BREW_PATH/bin/brew" shellenv)"
-        
-        # 2. Оптимизации
-        export HOMEBREW_NO_ANALYTICS=1
-        export HOMEBREW_NO_AUTO_UPDATE=1
-
-        # 3. Настройки специфичные для goinfre (Ecole 42)
+        chmod -R go-w "$(brew --prefix)/share/zsh" 2>/dev/null || true
+        echo "✅ Homebrew активирован"
         if [ -n "$GOINFRE_PATH" ]; then
-            export HOMEBREW_CASK_OPTS="--appdir=$GOINFRE_PATH/Applications --fontdir=$GOINFRE_PATH/Library/Fonts"
-            export HOMEBREW_CACHE="$BREW_PATH/cache"
-            mkdir -p "$GOINFRE_PATH/Applications" 2>/dev/null
-            mkdir -p "$GOINFRE_PATH/Library/Fonts" 2>/dev/null
-            mkdir -p "$HOMEBREW_CACHE" 2>/dev/null
-            if [ ! -L ~/Applications ] && [ ! -d ~/Applications ]; then
-                ln -sf "$GOINFRE_PATH/Applications" ~/Applications 2>/dev/null
-            fi
-            if [ ! -L ~/Library/Fonts ] && [ ! -d ~/Library/Fonts ]; then
-                ln -sf "$GOINFRE_PATH/Library/Fonts" ~/Library/Fonts 2>/dev/null
-            fi
             echo "📦 Cask приложения: $GOINFRE_PATH/Applications"
             echo "🗄️  Кеш brew: $HOMEBREW_CACHE"
         fi
-
-        # 4. Исправляем права для zsh автодополнения
-        chmod -R go-w "$(brew --prefix)/share/zsh" 2>/dev/null || true
-        echo "✅ Homebrew активирован"
         return 0
     else
         echo "❌ Homebrew не найден по пути: $BREW_PATH"
@@ -72,6 +73,7 @@ function brewInstall {
     chmod -R go-w "$(brew --prefix)/share/zsh"
     brew install lcov
     cd "$START_DIR"
+    brewActivate
     echo "Homebrew успешно установлен"
 }
 
@@ -111,6 +113,7 @@ function brewSetup {
     
     # Тестируем функциональность
     if brew --version > /dev/null 2>&1; then
+        brewActivate
         echo "✓ Homebrew успешно установлен и готов к работе"
         echo "✓ Доступны: brew install, brew search, brew update и другие команды"
     else
