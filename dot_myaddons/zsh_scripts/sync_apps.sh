@@ -78,20 +78,12 @@ sync_applications() {
 
     for user_dir in "$goinfre_base"/*; do
         if [ -d "$user_dir" ] && [ -r "$user_dir" ]; then
-            local username=$(basename "$user_dir")
             local user_apps_dir="$user_dir/Applications"
-
             if [ -d "$user_apps_dir" ] && [ -r "$user_apps_dir" ]; then
-                local target_user_dir="$home_apps/$username"
-
-                if [ ! -d "$target_user_dir" ]; then
-                    mkdir -p "$target_user_dir"
-                fi
-
                 for app in "$user_apps_dir"/*; do
-                    if [ -e "$app" ]; then
+                    if [ -e "$app" ] || [ -L "$app" ]; then
                         local app_name=$(basename "$app")
-                        local home_link="$target_user_dir/$app_name"
+                        local home_link="$home_apps/$app_name"
 
                         if [ -L "$home_link" ]; then
                             local current_target=$(readlink "$home_link")
@@ -103,13 +95,15 @@ sync_applications() {
                             else
                                 ((skipped_count++))
                             fi
+                        elif [ -e "$home_link" ]; then
+                            ((skipped_count++))
                         else
                             ln -s "$app" "$home_link" 2>/dev/null
                             if [ $? -eq 0 ]; then
                                 ((added_count++))
                                 log_info "Создана ссылка: $home_link -> $app"
                             else
-                                log_warning "Не удалось создать ссылку для $app_name (возможно, конфликт имён)"
+                                log_warning "Не удалось создать ссылку для $app_name"
                             fi
                         fi
                     fi
@@ -119,22 +113,12 @@ sync_applications() {
     done
 
     if [ -d "$home_apps" ]; then
-        for user_subdir in "$home_apps"/*; do
-            if [ -d "$user_subdir" ]; then
-                for link in "$user_subdir"/*; do
-                    if [ -L "$link" ]; then
-                        local target=$(readlink "$link")
-                        if [[ "$target" == "$goinfre_base"/*/Applications/* ]]; then
-                            if [ ! -e "$target" ]; then
-                                rm -f "$link"
-                                ((removed_count++))
-                                log_info "Удалена мёртвая ссылка: $link"
-                            fi
-                        fi
-                    fi
-                done
-                if [ -z "$(ls -A "$user_subdir")" ]; then
-                    rmdir "$user_subdir" 2>/dev/null && log_info "Удалена пустая директория: $user_subdir"
+        for link in "$home_apps"/*; do
+            if [ -L "$link" ]; then
+                if [ ! -e "$link" ]; then
+                    rm -f "$link"
+                    ((removed_count++))
+                    log_info "Удалена мёртвая ссылка: $link"
                 fi
             fi
         done
@@ -155,7 +139,7 @@ write_last_hostname() {
 
 main() {
     if [ ! -d "/opt/goinfre" ]; then
-        exit 0
+        return 0
     fi
 
     if need_sync; then
