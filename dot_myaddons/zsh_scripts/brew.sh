@@ -69,9 +69,10 @@ function brewInstall {
     fi
     git clone https://github.com/Homebrew/brew homebrew
     eval "$("$BREW_PATH/bin/brew" shellenv)"
-    brew update --force --quiet
+    # Используем command brew, чтобы обойти функцию-обёртку
+    command brew update --force --quiet
     chmod -R go-w "$(brew --prefix)/share/zsh"
-    brew install lcov
+    command brew install lcov
     cd "$START_DIR"
     brewActivate
     echo "Homebrew успешно установлен"
@@ -108,11 +109,12 @@ function brewSetup {
     git clone --depth=1 https://github.com/Homebrew/brew homebrew
     
     eval "$("$BREW_PATH/bin/brew" shellenv)"
-    brew update --force --quiet
+    # Используем command brew, чтобы обойти функцию-обёртку
+    command brew update --force --quiet
     chmod -R go-w "$(brew --prefix)/share/zsh"
     
     # Тестируем функциональность
-    if brew --version > /dev/null 2>&1; then
+    if command brew --version > /dev/null 2>&1; then
         brewActivate
         echo "✓ Homebrew успешно установлен и готов к работе"
         echo "✓ Доступны: brew install, brew search, brew update и другие команды"
@@ -134,6 +136,7 @@ function brewReinstall {
 if [[ ":$PATH:" != *":$BREW_PATH/bin:"* ]] && [ -d "$BREW_PATH/bin" ]; then
     export PATH="$BREW_PATH/bin:$PATH"
 fi
+
 # Обертка для автоматической установки при вызове brew
 brew() {
     if [ ! -f "$BREW_PATH/bin/brew" ]; then
