@@ -8,3 +8,4 @@ showcopy.sh
 translit.sh
 python_aliases.sh
 sync_apps.sh
+repeat.sh
