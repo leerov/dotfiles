@@ -36,9 +36,9 @@ fi
 
 # Функция активации Homebrew
 function brewActivate {
-    if [ -d "$BREW_PATH" ]; then
-        eval "$("$BREW_PATH/bin/brew" shellenv)"
-        chmod -R go-w "$(brew --prefix)/share/zsh" 2>/dev/null || true
+if [ -d "$BREW_PATH" ] && [ -x "$BREW_PATH/bin/brew" ]; then
+eval "$("$BREW_PATH/bin/brew" shellenv)"
+chmod -R go-w "$(command brew --prefix)/share/zsh" 2>/dev/null || true
         echo "✅ Homebrew активирован"
         if [ -n "$GOINFRE_PATH" ]; then
             echo "📦 Cask приложения: $GOINFRE_PATH/Applications"
@@ -67,12 +67,12 @@ function brewInstall {
     else
         cd "/tmp" || return 1
     fi
-    git clone https://github.com/Homebrew/brew homebrew
-    eval "$("$BREW_PATH/bin/brew" shellenv)"
-    # Используем command brew, чтобы обойти функцию-обёртку
-    command brew update --force --quiet
-    chmod -R go-w "$(brew --prefix)/share/zsh"
-    command brew install lcov
+git clone https://github.com/Homebrew/brew homebrew
+eval "$("$BREW_PATH/bin/brew" shellenv)"
+# Используем command brew, чтобы обойти функцию-обёртку
+command brew update --force --quiet
+chmod -R go-w "$(command brew --prefix)/share/zsh"
+command brew install lcov
     cd "$START_DIR"
     brewActivate
     echo "Homebrew успешно установлен"
@@ -91,9 +91,9 @@ function brewUninstall {
 
 # Основная функция установки/активации
 function brewSetup {
-    if [ -d "$BREW_PATH" ]; then
-        eval "$("$BREW_PATH/bin/brew" shellenv)"
-        chmod -R go-w "$(brew --prefix)/share/zsh"
+if [ -d "$BREW_PATH" ] && [ -x "$BREW_PATH/bin/brew" ]; then
+eval "$("$BREW_PATH/bin/brew" shellenv)"
+chmod -R go-w "$(command brew --prefix)/share/zsh"
         echo "✓ Homebrew активирован"
         return 0
     fi
@@ -106,12 +106,11 @@ function brewSetup {
         cd "/tmp" || return 1
     fi
     # Оптимальный вариант: неглубокое клонирование
-    git clone --depth=1 https://github.com/Homebrew/brew homebrew
-    
-    eval "$("$BREW_PATH/bin/brew" shellenv)"
-    # Используем command brew, чтобы обойти функцию-обёртку
-    command brew update --force --quiet
-    chmod -R go-w "$(brew --prefix)/share/zsh"
+git clone --depth=1 https://github.com/Homebrew/brew homebrew
+eval "$("$BREW_PATH/bin/brew" shellenv)"
+# Используем command brew, чтобы обойти функцию-обёртку
+command brew update --force --quiet
+chmod -R go-w "$(command brew --prefix)/share/zsh"
     
     # Тестируем функциональность
     if command brew --version > /dev/null 2>&1; then
@@ -139,12 +138,12 @@ fi
 
 # Обертка для автоматической установки при вызове brew
 brew() {
-    if [ ! -f "$BREW_PATH/bin/brew" ]; then
-        echo "🍺 Homebrew не установлен. Автоматически запускаю brewSetup..."
-        brewSetup
-    fi
-    if [[ ":$PATH:" != *":$BREW_PATH/bin:"* ]]; then
-        eval "$("$BREW_PATH/bin/brew" shellenv)" 2>/dev/null
-    fi
-    command brew "$@"
+if [ ! -f "$BREW_PATH/bin/brew" ]; then
+echo "🍺 Homebrew не установлен. Автоматически запускаю brewSetup..."
+brewSetup
+fi
+if [[ ":$PATH:" != *":$BREW_PATH/bin:"* ]] && [ -x "$BREW_PATH/bin/brew" ]; then
+eval "$("$BREW_PATH/bin/brew" shellenv)" 2>/dev/null
+fi
+command brew "$@"
 }
