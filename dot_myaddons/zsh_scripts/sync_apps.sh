@@ -60,6 +60,11 @@ need_sync() {
 }
 
 sync_applications() {
+    # Избегаем ошибки "no matches found" в zsh, если директория пуста
+    if [ -n "$ZSH_VERSION" ]; then
+        setopt localoptions nullglob
+    fi
+
     local goinfre_base="/opt/goinfre"
     local home_apps="$HOME/Applications"
 
