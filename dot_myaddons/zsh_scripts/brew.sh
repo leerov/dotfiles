@@ -73,9 +73,10 @@ eval "$("$BREW_PATH/bin/brew" shellenv)"
 command brew update --force --quiet
 chmod -R go-w "$(command brew --prefix)/share/zsh"
 command brew install lcov
-    cd "$START_DIR"
-    brewActivate
-    echo "Homebrew успешно установлен"
+cd "$START_DIR"
+brewActivate
+echo "Homebrew успешно установлен"
+source ~/.myaddons/zsh_scripts/sync_apps.sh 2>/dev/null
 }
 
 # Функция удаления Homebrew
@@ -113,11 +114,12 @@ command brew update --force --quiet
 chmod -R go-w "$(command brew --prefix)/share/zsh"
     
     # Тестируем функциональность
-    if command brew --version > /dev/null 2>&1; then
-        brewActivate
-        echo "✓ Homebrew успешно установлен и готов к работе"
-        echo "✓ Доступны: brew install, brew search, brew update и другие команды"
-    else
+if command brew --version > /dev/null 2>&1; then
+brewActivate
+echo "✓ Homebrew успешно установлен и готов к работе"
+echo "✓ Доступны: brew install, brew search, brew update и другие команды"
+source ~/.myaddons/zsh_scripts/sync_apps.sh 2>/dev/null
+else
         echo "❌ Что-то пошло не так"
         cd "$START_DIR"
         return 1
