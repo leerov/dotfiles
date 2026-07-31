@@ -1,6 +1,7 @@
 path.sh
 alias.sh
 colors.sh
+init_goinfre.sh
 brew.sh
 chezmoi_edit.sh
 unlock.sh
