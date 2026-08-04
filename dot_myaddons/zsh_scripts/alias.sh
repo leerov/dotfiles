@@ -4,6 +4,10 @@ alias v="nvim"
 alias vim="nvim"
 alias nano="nvim"
 alias code="nvim"
+elif command -v vim &>/dev/null; then
+alias v="vim"
+alias nano="vim"
+alias code="vim"
 fi
 alias ls='ls -G'
 alias ll="ls -laG"
