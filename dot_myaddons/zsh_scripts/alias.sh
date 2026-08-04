@@ -1,8 +1,10 @@
 alias dockle='docker run --rm -v /var/run/docker.sock:/var/run/docker.sock goodwithtech/dockle'
+if command -v nvim &>/dev/null; then
 alias v="nvim"
 alias vim="nvim"
 alias nano="nvim"
 alias code="nvim"
+fi
 alias ls='ls -G'
 alias ll="ls -laG"
 alias la="ls -aG"
