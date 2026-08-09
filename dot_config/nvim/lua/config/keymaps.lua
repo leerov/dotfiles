@@ -40,32 +40,5 @@ map("n", "<leader>0", "10gt", { desc = "Tab 10" })
 
 map("n", "<leader>sr", ":%s/", { desc = "Search and replace in file", silent = false })
 
-local term = { buf = nil, win = nil }
-local function toggle_terminal()
-	if term.win and vim.api.nvim_win_is_valid(term.win) then
-		vim.api.nvim_win_hide(term.win)
-		term.win = nil
-		return
-	end
-	if not term.buf or not vim.api.nvim_buf_is_valid(term.buf) then
-		term.buf = vim.api.nvim_create_buf(false, true)
-		vim.fn.termopen(vim.o.shell ~= "" and vim.o.shell or "zsh", { buf = term.buf })
-	end
-	local width = math.floor(vim.o.columns * 0.8)
-	local height = math.floor(vim.o.lines * 0.8)
-	term.win = vim.api.nvim_open_win(term.buf, true, {
-		relative = "editor",
-		width = width,
-		height = height,
-		col = math.floor((vim.o.columns - width) / 2),
-		row = math.floor((vim.o.lines - height) / 2),
-		style = "minimal",
-		border = "rounded",
-	})
-	vim.cmd("startinsert")
-end
-
-map("n", "<C-t>", toggle_terminal, { desc = "Toggle floating terminal" })
-map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 map("v", "<Tab>", ">gv", { desc = "Indent right" })
 map("v", "<S-Tab>", "<gv", { desc = "Indent left" })
