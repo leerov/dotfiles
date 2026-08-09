@@ -39,5 +39,7 @@ map("n", "<leader>9", "9gt", { desc = "Tab 9" })
 map("n", "<leader>0", "10gt", { desc = "Tab 10" })
 
 map("n", "<leader>sr", ":%s/", { desc = "Search and replace in file", silent = false })
+
+map("n", "<leader><leader>", "<cmd>terminal<CR>", { desc = "Open terminal" })
 map("v", "<Tab>", ">gv", { desc = "Indent right" })
 map("v", "<S-Tab>", "<gv", { desc = "Indent left" })
