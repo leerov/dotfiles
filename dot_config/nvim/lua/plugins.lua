@@ -144,16 +144,6 @@ require("lazy").setup({
     config = function() require("which-key").setup() end,
   },
 
-  {
-    "Pocco81/auto-save.nvim",
-    config = function()
-      require("auto-save").setup({
-        enabled        = true,
-        trigger_events = { "InsertLeave", "TextChanged" },
-        condition      = function() return true end,
-      })
-    end,
-  },
 
   {
     "hrsh7th/nvim-cmp",
